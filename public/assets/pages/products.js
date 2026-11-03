@@ -32,15 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
       { key: 'min_stock', label: 'Мин.' },
       { label: 'Цена', render: r => App.money(r.price) },
       {
-        label: 'Действия',
-        render: r => {
-          const open = `<a class="btn btn-ghost btn-sm" href="?page=product&id=${r.id}" title="Открыть карточку">👁</a>`;
-          if (!canEdit) return open;
-          return open
-            + ` <button class="btn btn-ghost btn-sm" data-edit="${r.id}" title="Редактировать">✎</button>`
-            + ` <button class="btn btn-danger btn-sm" data-del="${r.id}" title="Удалить">🗑</button>`;
-        },
-      },
+          label: 'Действия',
+          render: r => {
+              const open = `<a class="btn btn-ghost btn-sm" href="?page=product&id=${r.id}" title="Открыть карточку" aria-label="Открыть карточку товара">👁</a>`;
+              if (!canEdit) return open;
+              return open
+                  + ` <button class="btn btn-ghost btn-sm" data-edit="${r.id}" title="Редактировать" aria-label="Редактировать товар">✎</button>`
+                  + ` <button class="btn btn-danger btn-sm" data-del="${r.id}" title="Удалить" aria-label="Удалить товар">🗑</button>`;
+          },
+      }
     ];
     tbody.innerHTML = App.renderTable(rows, cols);
   }

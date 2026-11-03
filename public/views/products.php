@@ -5,8 +5,7 @@ require_once __DIR__ . '/../partials/layout_header.php';
 <h1 class="page-title">Товары</h1>
 
 <div class="toolbar">
-    <input type="text" id="products-search" placeholder="Поиск по SKU или названию…" style="max-width:320px">
-    <div class="spacer"></div>
+    <input type="text" id="products-search" placeholder="Поиск по SKU или названию…" style="max-width:320px" aria-label="Поиск по SKU или названию">    <div class="spacer"></div>
     <button class="btn btn-primary" id="product-add" style="display:none">+ Добавить товар</button>
 </div>
 
@@ -20,30 +19,35 @@ require_once __DIR__ . '/../partials/layout_header.php';
         <div class="dialog-body">
             <input type="hidden" id="product-id" value="">
             <div class="form-row">
-                <label>SKU *</label>
-                <input type="text" name="sku" required maxlength="64">
+                <label for="pf-sku">SKU *</label>
+                <input type="text" id="pf-sku" name="sku" required maxlength="64">
             </div>
             <div class="form-row">
-                <label>Название *</label>
-                <input type="text" name="name" required maxlength="255">
+                <label for="pf-name">Название *</label>
+                <input type="text" id="pf-name" name="name" required maxlength="255">
             </div>
             <div class="form-row">
-                <label>Категория</label>
-                <select name="category_id"></select>
+                <label for="pf-category">Категория</label>
+                <select id="pf-category" name="category_id"></select>
             </div>
             <div class="form-row">
-                <label>Единица измерения *</label>
-                <input type="text" name="unit" required value="шт" maxlength="16">
+                <label for="pf-unit">Единица измерения *</label>
+                <input type="text" id="pf-unit" name="unit" required value="шт" maxlength="16">
             </div>
             <div class="form-row" style="display:flex; gap:12px">
                 <div style="flex:1">
-                    <label>Остаток</label>
-                    <input type="number" name="quantity" min="0" step="1" value="0">
+                    <label for="pf-quantity">Остаток</label>
+                    <input type="number" id="pf-quantity" name="quantity" min="0" step="1" value="0">
                 </div>
                 <div style="flex:1">
-                    <label>Мин. остаток</label>
-                    <input type="number" name="min_stock" min="0" step="1" value="0">
+                    <label for="pf-min-stock">Мин. остаток</label>
+                    <input type="number" id="pf-min-stock" name="min_stock" min="0" step="1" value="0">
                 </div>
+            </div>
+            <div class="form-row">
+                <label for="pf-price">Цена</label>
+                <input type="number" id="pf-price" name="price" min="0" step="0.01" value="0">
+            </div>
             </div>
             <div class="form-row">
                 <label>Цена</label>

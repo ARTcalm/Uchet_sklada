@@ -90,9 +90,11 @@ const App = {
   toast(message, type = 'info', timeout = 3200) {
     let stack = document.querySelector('.toast-stack');
     if (!stack) {
-      stack = document.createElement('div');
-      stack.className = 'toast-stack';
-      document.body.appendChild(stack);
+        stack = document.createElement('div');
+        stack.className = 'toast-stack';
+        stack.setAttribute('role', 'status');
+        stack.setAttribute('aria-live', 'polite');
+        document.body.appendChild(stack);
     }
     const el = document.createElement('div');
     el.className = `toast ${type}`;

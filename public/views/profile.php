@@ -32,16 +32,16 @@ require_once __DIR__ . '/../partials/layout_header.php';
         <div class="panel-body">
             <form id="password-form" novalidate>
                 <div class="form-row">
-                    <label>Старый пароль *</label>
-                    <input type="password" name="old_password" required autocomplete="current-password">
+                    <label for="pp-old">Старый пароль *</label>
+                    <input type="password" id="pp-old" name="old_password" required autocomplete="current-password">
                 </div>
                 <div class="form-row">
-                    <label>Новый пароль * (мин. 4 символа)</label>
-                    <input type="password" name="new_password" required minlength="4" autocomplete="new-password">
+                    <label for="pp-new">Новый пароль * (мин. 4 символа)</label>
+                    <input type="password" id="pp-new" name="new_password" required minlength="4" autocomplete="new-password">
                 </div>
                 <div class="form-row">
-                    <label>Повторите новый пароль *</label>
-                    <input type="password" name="repeat_password" required minlength="4" autocomplete="new-password">
+                    <label for="pp-repeat">Повторите новый пароль *</label>
+                    <input type="password" id="pp-repeat" name="repeat_password" required minlength="4" autocomplete="new-password">
                 </div>
                 <div class="form-error" id="password-form-error"></div>
                 <button type="submit" class="btn btn-primary">Сменить пароль</button>

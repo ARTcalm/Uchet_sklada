@@ -12,7 +12,7 @@ require_once __DIR__ . '/../partials/layout_header.php';
 <!-- Вкладка: остатки -->
 <div class="report-tab" data-tab="stock">
     <div class="toolbar">
-        <select id="stock-category" style="max-width:240px">
+        <select id="stock-category" style="max-width:240px" aria-label="Категория">
             <option value="">Все категории</option>
         </select>
         <div class="spacer"></div>
@@ -25,15 +25,15 @@ require_once __DIR__ . '/../partials/layout_header.php';
 <div class="report-tab" data-tab="movement" style="display:none">
     <div class="toolbar" style="gap:12px">
         <div>
-            <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">С</label>
+            <label for="move-from" style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">С</label>
             <input type="date" id="move-from">
         </div>
         <div>
-            <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">По</label>
+            <label for="move-to" style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">По</label>
             <input type="date" id="move-to">
         </div>
         <div style="flex:1 1 260px">
-            <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Товар</label>
+            <label for="move-product" style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Товар</label>
             <select id="move-product">
                 <option value="">Все товары</option>
             </select>

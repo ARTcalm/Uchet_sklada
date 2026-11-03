@@ -16,27 +16,27 @@ require_once __DIR__ . '/../partials/layout_header.php';
     <form id="user-form" novalidate>
         <div class="dialog-header">Новый пользователь</div>
         <div class="dialog-body">
-            <div class="form-row">
-                <label>Логин *</label>
-                <input type="text" name="login" required maxlength="64" autocomplete="off">
-            </div>
-            <div class="form-row">
-                <label>Пароль *</label>
-                <input type="password" name="password" required minlength="4" autocomplete="new-password">
-            </div>
-            <div class="form-row">
-                <label>Имя *</label>
-                <input type="text" name="full_name" required maxlength="255">
-            </div>
-            <div class="form-row">
-                <label>Роль *</label>
-                <select name="role" required>
-                    <option value="worker">worker</option>
-                    <option value="manager">manager</option>
-                    <option value="admin">admin</option>
-                </select>
-            </div>
-            <div class="form-error" id="user-form-error"></div>
+        <div class="form-row">
+            <label for="uf-login">Логин *</label>
+            <input type="text" id="uf-login" name="login" required maxlength="64" autocomplete="off">
+        </div>
+        <div class="form-row">
+            <label for="uf-password">Пароль *</label>
+            <input type="password" id="uf-password" name="password" required minlength="4" autocomplete="new-password">
+        </div>
+        <div class="form-row">
+            <label for="uf-fullname">Имя *</label>
+            <input type="text" id="uf-fullname" name="full_name" required maxlength="255">
+        </div>
+        <div class="form-row">
+            <label for="uf-role">Роль *</label>
+            <select id="uf-role" name="role" required>
+                <option value="worker">worker</option>
+                <option value="manager">manager</option>
+                <option value="admin">admin</option>
+            </select>
+        </div>
+        <div class="form-error" id="user-form-error"></div>
         </div>
         <div class="dialog-footer">
             <button type="button" class="btn btn-ghost" id="user-cancel">Отмена</button>
@@ -51,31 +51,30 @@ require_once __DIR__ . '/../partials/layout_header.php';
         <div class="dialog-header">Редактировать пользователя</div>
         <div class="dialog-body">
             <input type="hidden" name="id" value="">
-
             <div class="form-row">
-                <label>Логин *</label>
-                <input type="text" name="login" required maxlength="64" autocomplete="off">
+                <label for="ue-login">Логин *</label>
+                <input type="text" id="ue-login" name="login" required maxlength="64" autocomplete="off">
             </div>
             <div class="form-row">
-                <label>Новый пароль</label>
-                <input type="password" name="password" minlength="4" autocomplete="new-password"
-                       placeholder="Оставьте пустым, чтобы не менять">
+                <label for="ue-password">Новый пароль</label>
+                <input type="password" id="ue-password" name="password" minlength="4" autocomplete="new-password"
+                    placeholder="Оставьте пустым, чтобы не менять">
             </div>
             <div class="form-row">
-                <label>Имя *</label>
-                <input type="text" name="full_name" required maxlength="255">
+                <label for="ue-fullname">Имя *</label>
+                <input type="text" id="ue-fullname" name="full_name" required maxlength="255">
             </div>
             <div class="form-row">
-                <label>Роль *</label>
-                <select name="role" required>
+                <label for="ue-role">Роль *</label>
+                <select id="ue-role" name="role" required>
                     <option value="worker">worker</option>
                     <option value="manager">manager</option>
                     <option value="admin">admin</option>
                 </select>
             </div>
             <div class="form-row">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-                    <input type="checkbox" name="is_active" value="1" style="width:auto">
+                <label for="ue-is-active" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <input type="checkbox" id="ue-is-active" name="is_active" value="1" style="width:auto">
                     Активен
                 </label>
             </div>

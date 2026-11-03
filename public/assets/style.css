@@ -167,7 +167,7 @@ input[type=date], select, textarea {
   width: 100%;
   transition: border-color var(--transition), box-shadow var(--transition);
 }
-input::placeholder, textarea::placeholder { color: #94a3b8; }
+input::placeholder, textarea::placeholder { color: #64748b; }
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
@@ -528,7 +528,7 @@ body.drawer-open .floating-actions {
   min-width: 20px; height: 20px;
   padding: 0 5px;
   border-radius: 999px;
-  background: var(--danger);
+  background: #dc2626;
   color: #fff;
   font-size: 10.5px;
   font-weight: 700;
