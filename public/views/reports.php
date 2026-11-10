@@ -11,11 +11,16 @@ require_once __DIR__ . '/../partials/layout_header.php';
 
 <!-- Вкладка: остатки -->
 <div class="report-tab" data-tab="stock">
-    <div class="toolbar">
-        <select id="stock-category" style="max-width:240px" aria-label="Категория">
+    <div class="toolbar" style="gap:10px; flex-wrap:wrap">
+        <input type="text" id="stock-search" placeholder="Поиск по названию или SKU…" style="max-width:240px" aria-label="Поиск по товару">
+        <select id="stock-category" style="max-width:200px" aria-label="Категория">
             <option value="">Все категории</option>
         </select>
+        <select id="stock-product" style="max-width:260px" aria-label="Товар">
+            <option value="">Все товары</option>
+        </select>
         <div class="spacer"></div>
+        <button class="btn btn-ghost" id="stock-reset">Сбросить</button>
         <button class="btn btn-ghost" id="stock-export">Экспорт CSV</button>
     </div>
     <div class="table-wrap" id="stock-table"></div>

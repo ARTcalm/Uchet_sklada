@@ -18,25 +18,22 @@ $csrf = csrf_token();
     <div class="login-card">
         <h1>Склад</h1>
         <p class="subtitle">Войдите, чтобы продолжить</p>
-
         <form id="login-form" novalidate>
             <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf, ENT_QUOTES) ?>">
-
             <div class="form-row">
-                <label for="login">Логин</label>
-                <input type="text" id="login" name="login" autocomplete="username" required>
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" autocomplete="email" required>
             </div>
             <div class="form-row">
                 <label for="password">Пароль</label>
                 <input type="password" id="password" name="password" autocomplete="current-password" required>
             </div>
-
             <div class="form-error" id="login-error"></div>
-
             <button type="submit" class="btn btn-primary" style="width:100%">Войти</button>
         </form>
-
-        <p class="hint">admin / admin &nbsp;·&nbsp; manager / manager &nbsp;·&nbsp; worker / worker</p>
+        <p style="text-align:center;margin-top:16px;font-size:13px">
+            Нет аккаунта? <a href="?page=register">Зарегистрировать склад</a>
+        </p>
     </div>
 </main>
 
@@ -50,12 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
     err.textContent = '';
     const body = new URLSearchParams(new FormData(form));
     try {
-      const res  = await fetch('api/auth.php?action=login', { method: 'POST', body });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'Ошибка входа');
-    window.location.href = '?page=menu';
+        const res  = await fetch('api/auth.php?action=login', { method: 'POST', body });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Ошибка входа');
+        window.location.href = data.data.redirect || '?page=menu';
     } catch (e2) {
-      err.textContent = e2.message;
+        err.textContent = e2.message;
     }
   });
 });

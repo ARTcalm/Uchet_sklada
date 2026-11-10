@@ -4,48 +4,73 @@ declare(strict_types=1);
 require_once __DIR__ . '/../helpers.php';
 
 /**
- * Расширенный дашборд.
+ * Расширенный дашборд (метрики только по своей компании).
  */
-function reports_dashboard(PDO $pdo): array
+function reports_dashboard(PDO $pdo, int $companyId): array
 {
-    $totalProducts = (int)$pdo->query('SELECT COUNT(*) FROM products')->fetchColumn();
+    // 1) Всего товаров
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM products WHERE company_id = :cid');
+    $stmt->execute([':cid' => $companyId]);
+    $totalProducts = (int)$stmt->fetchColumn();
 
-    $totalValue = (float)$pdo->query(
-        'SELECT COALESCE(SUM(quantity * price), 0) FROM products'
-    )->fetchColumn();
+    // 2) Стоимость склада
+    $stmt = $pdo->prepare(
+        'SELECT COALESCE(SUM(quantity * price), 0) FROM products WHERE company_id = :cid'
+    );
+    $stmt->execute([':cid' => $companyId]);
+    $totalValue = (float)$stmt->fetchColumn();
 
-    $lowStock = (int)$pdo->query(
-        'SELECT COUNT(*) FROM products WHERE quantity <= min_stock'
-    )->fetchColumn();
+    // 3) Ниже минимума
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*) FROM products WHERE company_id = :cid AND quantity <= min_stock'
+    );
+    $stmt->execute([':cid' => $companyId]);
+    $lowStock = (int)$stmt->fetchColumn();
 
-    $opsToday = (int)$pdo->query(
-        'SELECT COUNT(*) FROM operations WHERE DATE(created_at) = CURDATE()'
-    )->fetchColumn();
+    // 4) Операции за сегодня
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*) FROM operations
+         WHERE company_id = :cid AND DATE(created_at) = CURDATE()'
+    );
+    $stmt->execute([':cid' => $companyId]);
+    $opsToday = (int)$stmt->fetchColumn();
 
-    $newProducts7d = (int)$pdo->query(
-        'SELECT COUNT(*) FROM products WHERE created_at >= NOW() - INTERVAL 7 DAY'
-    )->fetchColumn();
+    // 5) Новые товары за 7 дней
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*) FROM products
+         WHERE company_id = :cid AND created_at >= NOW() - INTERVAL 7 DAY'
+    );
+    $stmt->execute([':cid' => $companyId]);
+    $newProducts7d = (int)$stmt->fetchColumn();
 
-    $stale30d = (int)$pdo->query(
+    // 6) Без движения 30 дней
+    $stmt = $pdo->prepare(
         'SELECT COUNT(*) FROM products p
-         WHERE p.quantity > 0
+         WHERE p.company_id = :cid
+           AND p.quantity > 0
            AND NOT EXISTS (
                SELECT 1 FROM operations o
                WHERE o.product_id = p.id
+                 AND o.company_id = :cid2
                  AND o.created_at >= NOW() - INTERVAL 30 DAY
            )'
-    )->fetchColumn();
+    );
+    $stmt->execute([':cid' => $companyId, ':cid2' => $companyId]);
+    $stale30d = (int)$stmt->fetchColumn();
 
-    // Активность за 7 дней
-    $rawActivity = $pdo->query(
+    // 7) Активность за 7 дней (по дням)
+    $stmt = $pdo->prepare(
         "SELECT DATE(created_at) AS d, type,
                 SUM(qty) AS total_qty,
                 COUNT(*) AS cnt
          FROM operations
-         WHERE created_at >= CURDATE() - INTERVAL 6 DAY
+         WHERE company_id = :cid
+           AND created_at >= CURDATE() - INTERVAL 6 DAY
          GROUP BY DATE(created_at), type
          ORDER BY d ASC"
-    )->fetchAll();
+    );
+    $stmt->execute([':cid' => $companyId]);
+    $rawActivity = $stmt->fetchAll();
 
     $days = [];
     for ($i = 6; $i >= 0; $i--) {
@@ -70,12 +95,17 @@ function reports_dashboard(PDO $pdo): array
     }
     $activity = array_values($days);
 
-    $sums7d = $pdo->query(
+    // 8) Итоги за 7 дней
+    $stmt = $pdo->prepare(
         "SELECT type, SUM(qty) AS qty, COUNT(*) AS cnt
          FROM operations
-         WHERE created_at >= CURDATE() - INTERVAL 6 DAY
+         WHERE company_id = :cid
+           AND created_at >= CURDATE() - INTERVAL 6 DAY
          GROUP BY type"
-    )->fetchAll();
+    );
+    $stmt->execute([':cid' => $companyId]);
+    $sums7d = $stmt->fetchAll();
+
     $summary7d = [
         'in'       => ['qty' => 0.0, 'cnt' => 0],
         'out'      => ['qty' => 0.0, 'cnt' => 0],
@@ -85,14 +115,16 @@ function reports_dashboard(PDO $pdo): array
         $summary7d[$r['type']] = ['qty' => (float)$r['qty'], 'cnt' => (int)$r['cnt']];
     }
 
-    // Топ-5 дефицитных
-    $lowStockItems = $pdo->query(
+    // 9) Топ-5 дефицитных товаров
+    $stmt = $pdo->prepare(
         'SELECT id, sku, name, unit, quantity, min_stock
          FROM products
-         WHERE quantity <= min_stock
+         WHERE company_id = :cid AND quantity <= min_stock
          ORDER BY (min_stock - quantity) DESC, quantity ASC
          LIMIT 5'
-    )->fetchAll();
+    );
+    $stmt->execute([':cid' => $companyId]);
+    $lowStockItems = $stmt->fetchAll();
     foreach ($lowStockItems as &$r) {
         $r['id']        = (int)$r['id'];
         $r['quantity']  = (float)$r['quantity'];
@@ -101,15 +133,17 @@ function reports_dashboard(PDO $pdo): array
     }
     unset($r);
 
-    // Топ-5 по стоимости
-    $topValue = $pdo->query(
+    // 10) Топ-5 самых дорогих позиций
+    $stmt = $pdo->prepare(
         'SELECT id, sku, name, unit, quantity, price,
                 (quantity * price) AS total_value
          FROM products
-         WHERE quantity > 0
+         WHERE company_id = :cid AND quantity > 0
          ORDER BY (quantity * price) DESC
          LIMIT 5'
-    )->fetchAll();
+    );
+    $stmt->execute([':cid' => $companyId]);
+    $topValue = $stmt->fetchAll();
     foreach ($topValue as &$r) {
         $r['id']          = (int)$r['id'];
         $r['quantity']    = (float)$r['quantity'];
@@ -118,17 +152,20 @@ function reports_dashboard(PDO $pdo): array
     }
     unset($r);
 
-    // Последние 10 операций
-    $recent = $pdo->query(
+    // 11) Последние 10 операций
+    $stmt = $pdo->prepare(
         'SELECT o.id, o.type, o.qty, o.comment, o.created_at,
                 p.sku, p.name AS product_name,
                 u.full_name AS user_name
          FROM operations o
          JOIN products p ON p.id = o.product_id
          JOIN users    u ON u.id = o.user_id
+         WHERE o.company_id = :cid
          ORDER BY o.created_at DESC, o.id DESC
          LIMIT 10'
-    )->fetchAll();
+    );
+    $stmt->execute([':cid' => $companyId]);
+    $recent = $stmt->fetchAll();
     foreach ($recent as &$r) {
         $r['id']  = (int)$r['id'];
         $r['qty'] = (float)$r['qty'];
@@ -153,23 +190,35 @@ function reports_dashboard(PDO $pdo): array
 }
 
 /**
- * Отчёт «Остатки» (с фильтром по категории).
+ * Отчёт «Остатки» с фильтрами по категории, товару и названию.
+ * Только для своей компании.
  */
-function reports_stock(PDO $pdo, ?int $categoryId): array
+function reports_stock(PDO $pdo, int $companyId, ?int $categoryId, ?int $productId = null, string $search = ''): array
 {
-    $where  = '';
-    $params = [];
+    $where  = ['p.company_id = :cid'];
+    $params = [':cid' => $companyId];
+
     if ($categoryId !== null) {
-        $where = 'WHERE p.category_id = :cid';
-        $params[':cid'] = $categoryId;
+        $where[] = 'p.category_id = :cat';
+        $params[':cat'] = $categoryId;
     }
+    if ($productId !== null) {
+        $where[] = 'p.id = :pid';
+        $params[':pid'] = $productId;
+    }
+    if ($search !== '') {
+        $where[] = '(p.name LIKE :search OR p.sku LIKE :search)';
+        $params[':search'] = '%' . $search . '%';
+    }
+
+    $whereSql = 'WHERE ' . implode(' AND ', $where);
 
     $sql = "
         SELECT p.id, p.sku, p.name, p.unit, p.quantity, p.min_stock, p.price,
                COALESCE(c.name, '') AS category_name
         FROM products p
         LEFT JOIN categories c ON c.id = p.category_id
-        $where
+        $whereSql
         ORDER BY c.name ASC, p.name ASC
     ";
     $stmt = $pdo->prepare($sql);
@@ -188,11 +237,12 @@ function reports_stock(PDO $pdo, ?int $categoryId): array
 
 /**
  * Отчёт «Движение товара за период».
+ * Только для своей компании.
  */
-function reports_movement(PDO $pdo, string $from, string $to, ?int $productId): array
+function reports_movement(PDO $pdo, int $companyId, string $from, string $to, ?int $productId): array
 {
-    $where  = 'WHERE o.created_at >= :from AND o.created_at < DATE_ADD(:to, INTERVAL 1 DAY)';
-    $params = [':from' => $from . ' 00:00:00', ':to' => $to];
+    $where  = 'WHERE o.company_id = :cid AND o.created_at >= :from AND o.created_at < DATE_ADD(:to, INTERVAL 1 DAY)';
+    $params = [':cid' => $companyId, ':from' => $from . ' 00:00:00', ':to' => $to];
 
     if ($productId !== null) {
         $where .= ' AND o.product_id = :pid';
@@ -222,20 +272,22 @@ function reports_movement(PDO $pdo, string $from, string $to, ?int $productId): 
 }
 
 /**
- * Всё для страницы товара: операции по дням (для графика),
- * последние 50 операций, audit по товару.
+ * Всё для страницы товара: операции по дням за 30 дней,
+ * последние 50 операций и audit по товару.
+ * Только для своей компании.
  */
-function reports_product_detail(PDO $pdo, int $productId): array
+function reports_product_detail(PDO $pdo, int $productId, int $companyId): array
 {
-    // Операции по дням за 30 дней (для графика)
+    // 1) Операции по дням за 30 дней (для графика)
     $stmt = $pdo->prepare(
         "SELECT DATE(created_at) AS d, type, SUM(qty) AS total_qty
          FROM operations
          WHERE product_id = :pid
+           AND company_id = :cid
            AND created_at >= CURDATE() - INTERVAL 29 DAY
          GROUP BY DATE(created_at), type"
     );
-    $stmt->execute([':pid' => $productId]);
+    $stmt->execute([':pid' => $productId, ':cid' => $companyId]);
     $raw = $stmt->fetchAll();
 
     $days = [];
@@ -253,17 +305,17 @@ function reports_product_detail(PDO $pdo, int $productId): array
         }
     }
 
-    // Последние 50 операций по товару
+    // 2) Последние 50 операций по товару
     $stmt = $pdo->prepare(
         'SELECT o.id, o.type, o.qty, o.comment, o.created_at,
                 u.full_name AS user_name
          FROM operations o
          JOIN users u ON u.id = o.user_id
-         WHERE o.product_id = :pid
+         WHERE o.product_id = :pid AND o.company_id = :cid
          ORDER BY o.created_at DESC, o.id DESC
          LIMIT 50'
     );
-    $stmt->execute([':pid' => $productId]);
+    $stmt->execute([':pid' => $productId, ':cid' => $companyId]);
     $operations = $stmt->fetchAll();
     foreach ($operations as &$r) {
         $r['id']  = (int)$r['id'];
@@ -271,17 +323,19 @@ function reports_product_detail(PDO $pdo, int $productId): array
     }
     unset($r);
 
-    // Audit по товару
+    // 3) Audit по товару
     $stmt = $pdo->prepare(
         'SELECT a.id, a.action, a.created_at,
                 COALESCE(u.full_name, "—") AS user_name
          FROM audit_log a
          LEFT JOIN users u ON u.id = a.user_id
-         WHERE a.entity = "products" AND a.entity_id = :pid
+         WHERE a.entity = "products"
+           AND a.entity_id = :pid
+           AND a.company_id = :cid
          ORDER BY a.created_at DESC, a.id DESC
          LIMIT 50'
     );
-    $stmt->execute([':pid' => $productId]);
+    $stmt->execute([':pid' => $productId, ':cid' => $companyId]);
     $audit = $stmt->fetchAll();
     foreach ($audit as &$r) {
         $r['id'] = (int)$r['id'];

@@ -19,12 +19,17 @@ const App = {
   async request(url, options = {}) {
     const opts = Object.assign({ credentials: 'same-origin' }, options);
     const res  = await fetch(url, opts);
-    let data;
-    try {
-      data = await res.json();
-    } catch (e) {
-      throw new Error(`Некорректный ответ сервера (${res.status})`);
+
+    // 401/403 = сессия истекла или недействительный CSRF-токен
+    if (res.status === 401 || res.status === 403) {
+      window.location.href = '?page=login';
+      throw new Error('Сессия истекла, войдите заново');
     }
+
+    let data;
+    try { data = await res.json(); }
+    catch (e) { throw new Error(`Некорректный ответ сервера (${res.status})`); }
+
     if (!data || data.ok !== true) {
       const msg = (data && data.error) || `Ошибка ${res.status}`;
       throw new Error(msg);
@@ -63,13 +68,15 @@ const App = {
     }
     const head = columns.map(c => `<th>${this.esc(c.label)}</th>`).join('');
     const body = rows.map(row => {
-      const tds = columns.map(c => {
-        const raw = c.render ? c.render(row) : row[c.key];
-        const cls = typeof c.className === 'function'
-          ? c.className(row)
-          : (c.className || '');
-        return `<td class="${this.esc(cls)}">${raw === null || raw === undefined ? '' : raw}</td>`;
-      }).join('');
+    const tds = columns.map(c => {
+      const raw = c.render
+        ? c.render(row)                                 
+        : this.esc(row[c.key]);                         
+      const cls = typeof c.className === 'function'
+        ? c.className(row)
+        : (c.className || '');
+      return `<td class="${this.esc(cls)}">${raw === null || raw === undefined ? '' : raw}</td>`;
+    }).join('');
       return `<tr>${tds}</tr>`;
     }).join('');
     return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;

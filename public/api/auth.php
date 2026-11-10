@@ -6,7 +6,9 @@ require_once __DIR__ . '/../../src/auth.php';
 require_once __DIR__ . '/../../src/db.php';
 require_once __DIR__ . '/../../src/models/users.php';
 
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
 $action = $_GET['action'] ?? '';
 
@@ -16,23 +18,26 @@ try {
             require_method('POST');
             verify_csrf();
 
-            $login    = sanitize($_POST['login'] ?? '');
+            $email    = sanitize($_POST['email'] ?? '');
             $password = (string)($_POST['password'] ?? '');
 
-            if ($login === '' || $password === '') {
-                json_response(false, null, 'Логин и пароль обязательны');
+            if ($email === '' || $password === '') {
+                json_response(false, null, 'Email и пароль обязательны');
             }
 
             $pdo  = db();
             $stmt = $pdo->prepare(
-                'SELECT id, login, password_hash, full_name, role, is_active
-                 FROM users WHERE login = :login LIMIT 1'
+                'SELECT u.id, u.company_id, u.email, u.password_hash, u.full_name, u.role, u.is_active,
+                        c.name AS company_name
+                FROM users u
+                JOIN companies c ON c.id = u.company_id
+                WHERE u.email = :email LIMIT 1'
             );
-            $stmt->execute([':login' => $login]);
+            $stmt->execute([':email' => mb_strtolower(trim($email))]);
             $user = $stmt->fetch();
 
             if (!$user || !password_verify($password, $user['password_hash'])) {
-                json_response(false, null, 'Неверный логин или пароль');
+                json_response(false, null, 'Неверный email или пароль');
             }
             if ((int)$user['is_active'] !== 1) {
                 json_response(false, null, 'Пользователь заблокирован');
@@ -40,18 +45,20 @@ try {
 
             session_regenerate_id(true);
             $_SESSION['user'] = [
-                'id'        => (int)$user['id'],
-                'login'     => $user['login'],
-                'full_name' => $user['full_name'],
-                'role'      => $user['role'],
+                'id'           => (int)$user['id'],
+                'company_id'   => (int)$user['company_id'],
+                'company_name' => $user['company_name'],
+                'email'        => $user['email'],
+                'full_name'    => $user['full_name'],
+                'role'         => $user['role'],
             ];
             rotate_csrf();
 
             log_action($pdo, (int)$user['id'], 'login', 'users', (int)$user['id']);
-
             json_response(true, [
                 'user' => $_SESSION['user'],
                 'csrf' => $_SESSION['csrf'],
+                'redirect' => '?page=menu',
             ]);
             break;
 

@@ -59,10 +59,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function render(rows) {
     const cols = [
       { label: 'Дата', render: r => App.formatDate(r.created_at) },
-      { label: 'Пользователь', render: r =>
-          r.user_name !== '—'
-            ? `${App.esc(r.user_name)} <span class="muted">(${App.esc(r.user_login || '')})</span>`
-            : '<span class="muted">—</span>' },
+      { label: 'Пользователь', render: r => {
+          if (r.user_name === '—') return '<span class="muted">—</span>';
+          const email = r.user_email ? ` <span class="muted">(${App.esc(r.user_email)})</span>` : '';
+          return `${App.esc(r.user_name)}${email}`;
+      }},
       { label: 'Действие', render: r =>
           `<span class="badge">${App.esc(actionLabels[r.action] || r.action)}</span>` },
       { label: 'Сущность', render: r =>

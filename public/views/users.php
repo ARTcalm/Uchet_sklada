@@ -17,8 +17,8 @@ require_once __DIR__ . '/../partials/layout_header.php';
         <div class="dialog-header">Новый пользователь</div>
         <div class="dialog-body">
         <div class="form-row">
-            <label for="uf-login">Логин *</label>
-            <input type="text" id="uf-login" name="login" required maxlength="64" autocomplete="off">
+            <label for="uf-email">Email *</label>
+            <input type="email" id="uf-email" name="email" required maxlength="255" autocomplete="off">
         </div>
         <div class="form-row">
             <label for="uf-password">Пароль *</label>
@@ -52,8 +52,8 @@ require_once __DIR__ . '/../partials/layout_header.php';
         <div class="dialog-body">
             <input type="hidden" name="id" value="">
             <div class="form-row">
-                <label for="ue-login">Логин *</label>
-                <input type="text" id="ue-login" name="login" required maxlength="64" autocomplete="off">
+                <label for="ue-email">Email *</label>
+                <input type="email" id="ue-email" name="email" required maxlength="255" autocomplete="off">
             </div>
             <div class="form-row">
                 <label for="ue-password">Новый пароль</label>

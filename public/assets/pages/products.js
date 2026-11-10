@@ -34,11 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
       {
           label: 'Действия',
           render: r => {
-              const open = `<a class="btn btn-ghost btn-sm" href="?page=product&id=${r.id}" title="Открыть карточку" aria-label="Открыть карточку товара">👁</a>`;
-              if (!canEdit) return open;
+              const open = `<div class="pr-btns"><a class="btn btn-ghost btn-sm" href="?page=product&id=${r.id}" title="Открыть карточку" aria-label="Открыть карточку товара">👁</a>`;
+              if (!canEdit) return open + `</div>`;
               return open
                   + ` <button class="btn btn-ghost btn-sm" data-edit="${r.id}" title="Редактировать" aria-label="Редактировать товар">✎</button>`
-                  + ` <button class="btn btn-danger btn-sm" data-del="${r.id}" title="Удалить" aria-label="Удалить товар">🗑</button>`;
+                  + ` <button class="btn btn-danger btn-sm" data-del="${r.id}" title="Удалить" aria-label="Удалить товар">🗑</button>`
+                  + `</div>`; 
           },
       }
     ];
@@ -133,6 +134,15 @@ document.addEventListener('DOMContentLoaded', () => {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     formErr.textContent = '';
+
+    const sku  = form.sku.value.trim();
+    const name = form.name.value.trim();
+    const unit = form.unit.value.trim();
+
+    if (sku === '')  { formErr.textContent = 'Укажите SKU';           return; }
+    if (name === '') { formErr.textContent = 'Укажите название';      return; }
+    if (unit === '') { formErr.textContent = 'Укажите единицу';       return; }
+
     const id = document.getElementById('product-id').value;
     const payload = {
       sku:         form.sku.value.trim(),
@@ -143,6 +153,18 @@ document.addEventListener('DOMContentLoaded', () => {
       min_stock:   Number(form.min_stock.value || 0),
       price:       Number(form.price.value || 0),
     };
+
+    const qty   = Number(form.quantity.value  || 0);
+    const minSt = Number(form.min_stock.value || 0);
+    const price = Number(form.price.value     || 0);
+
+    const MAX_QTY   = 999999999.999;
+    const MAX_PRICE = 999999999.99;
+
+    if (qty   < 0 || qty   > MAX_QTY)   { formErr.textContent = 'Остаток вне допустимого диапазона';      return; }
+    if (minSt < 0 || minSt > MAX_QTY)   { formErr.textContent = 'Мин. остаток вне допустимого диапазона'; return; }
+    if (price < 0 || price > MAX_PRICE) { formErr.textContent = 'Цена вне допустимого диапазона';         return; }
+
     try {
       if (id) {
         payload.id = Number(id);

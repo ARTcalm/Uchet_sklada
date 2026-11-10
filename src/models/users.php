@@ -3,12 +3,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers.php';
 
-function users_list(PDO $pdo): array
+function users_list(PDO $pdo, int $companyId): array
 {
-    $stmt = $pdo->query(
-        'SELECT id, login, full_name, role, is_active, created_at
-         FROM users ORDER BY id ASC'
+    $stmt = $pdo->prepare(
+        'SELECT id, email, full_name, role, is_active, created_at
+         FROM users WHERE company_id = :cid ORDER BY id ASC'
     );
+    $stmt->execute([':cid' => $companyId]);
     $rows = $stmt->fetchAll();
     foreach ($rows as &$r) {
         $r['id']        = (int)$r['id'];
@@ -18,120 +19,101 @@ function users_list(PDO $pdo): array
     return $rows;
 }
 
-/**
- * Один пользователь по id.
- */
-function users_get(PDO $pdo, int $id): ?array
+function users_get(PDO $pdo, int $id, int $companyId): ?array
 {
     $stmt = $pdo->prepare(
-        'SELECT id, login, full_name, role, is_active, created_at
-         FROM users WHERE id = :id LIMIT 1'
+        'SELECT id, email, full_name, role, is_active, created_at
+         FROM users WHERE id = :id AND company_id = :cid LIMIT 1'
     );
-    $stmt->execute([':id' => $id]);
+    $stmt->execute([':id' => $id, ':cid' => $companyId]);
     $row = $stmt->fetch();
-    if (!$row) {
-        return null;
-    }
+    if (!$row) return null;
     $row['id']        = (int)$row['id'];
     $row['is_active'] = (int)$row['is_active'];
     return $row;
 }
 
-/**
- * Валидация создания.
- */
-function validate_user(array $input): array
+function validate_user(array $input, int $companyId): array
 {
     $errors = validate_fields($input, [
-        'login'     => ['required' => true, 'maxlen' => 64],
+        'email'     => ['required' => true, 'maxlen' => 255],
         'password'  => ['required' => true, 'maxlen' => 72],
         'full_name' => ['required' => true, 'maxlen' => 255],
         'role'      => ['required' => true, 'in' => ['admin', 'manager', 'worker']],
     ]);
+    if ($errors) return $errors;
 
-    if ($errors) {
+    $email = mb_strtolower(trim((string)$input['email']));
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Некорректный email';
         return $errors;
     }
 
     $pdo = db();
-    $stmt = $pdo->prepare('SELECT 1 FROM users WHERE login = :l LIMIT 1');
-    $stmt->execute([':l' => $input['login']]);
-    if ($stmt->fetchColumn()) {
-        $errors[] = 'Логин уже занят';
-    }
-
+    $stmt = $pdo->prepare('SELECT 1 FROM users WHERE email = :e AND company_id = :cid LIMIT 1');
+    $stmt->execute([':e' => $email, ':cid' => $companyId]);
+    if ($stmt->fetchColumn()) $errors[] = 'Пользователь с таким email уже есть в вашей компании';
     return $errors;
 }
 
-/**
- * Валидация редактирования.
- * Пароль НЕ обязателен — если пусто, пароль не меняется.
- */
-function validate_user_update(array $input, int $id): array
+function validate_user_update(array $input, int $id, int $companyId): array
 {
     $errors = validate_fields($input, [
-        'login'     => ['required' => true, 'maxlen' => 64],
+        'email'     => ['required' => true, 'maxlen' => 255],
         'full_name' => ['required' => true, 'maxlen' => 255],
         'role'      => ['required' => true, 'in' => ['admin', 'manager', 'worker']],
     ]);
+    if ($errors) return $errors;
 
-    if ($errors) {
+    $email = mb_strtolower(trim((string)$input['email']));
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Некорректный email';
         return $errors;
     }
 
     if (isset($input['password']) && $input['password'] !== '') {
-        if (mb_strlen((string)$input['password']) < 4) {
-            $errors[] = 'Пароль должен быть не короче 4 символов';
-        }
-        if (mb_strlen((string)$input['password']) > 72) {
-            $errors[] = 'Пароль слишком длинный';
-        }
+        if (mb_strlen((string)$input['password']) < 4) $errors[] = 'Пароль слишком короткий';
+        if (mb_strlen((string)$input['password']) > 72) $errors[] = 'Пароль слишком длинный';
     }
 
     $pdo = db();
-    $stmt = $pdo->prepare('SELECT 1 FROM users WHERE login = :l AND id <> :id LIMIT 1');
-    $stmt->execute([':l' => $input['login'], ':id' => $id]);
-    if ($stmt->fetchColumn()) {
-        $errors[] = 'Логин уже занят другим пользователем';
-    }
-
+    $stmt = $pdo->prepare('SELECT 1 FROM users WHERE email = :e AND company_id = :cid AND id <> :id LIMIT 1');
+    $stmt->execute([':e' => $email, ':cid' => $companyId, ':id' => $id]);
+    if ($stmt->fetchColumn()) $errors[] = 'Email уже занят другим пользователем';
     return $errors;
 }
 
-function users_create(PDO $pdo, array $input): int
+function users_create(PDO $pdo, array $input, int $companyId): int
 {
     $stmt = $pdo->prepare(
-        'INSERT INTO users (login, password_hash, full_name, role, is_active, created_at)
-         VALUES (:l, :p, :f, :r, 1, NOW())'
+        'INSERT INTO users (company_id, email, password_hash, full_name, role, is_active, created_at)
+         VALUES (:cid, :e, :p, :f, :r, 1, NOW())'
     );
     $stmt->execute([
-        ':l' => $input['login'],
-        ':p' => password_hash((string)$input['password'], PASSWORD_BCRYPT),
-        ':f' => $input['full_name'],
-        ':r' => $input['role'],
+        ':cid' => $companyId,
+        ':e'   => mb_strtolower(trim((string)$input['email'])),
+        ':p'   => password_hash((string)$input['password'], PASSWORD_BCRYPT),
+        ':f'   => $input['full_name'],
+        ':r'   => $input['role'],
     ]);
     return (int)$pdo->lastInsertId();
 }
 
-/**
- * Обновление пользователя.
- * Может менять: login, full_name, role, is_active, password (опционально).
- */
-function users_update(PDO $pdo, int $id, array $input): void
+function users_update(PDO $pdo, int $id, int $companyId, array $input): void
 {
-    $sets   = [];
-    $params = [':id' => $id];
+    $sets = [];
+    $params = [':id' => $id, ':cid' => $companyId];
 
-    if (isset($input['login'])) {
-        $sets[] = 'login = :login';
-        $params[':login'] = (string)$input['login'];
+    if (isset($input['email'])) {
+        $sets[] = 'email = :email';
+        $params[':email'] = mb_strtolower(trim((string)$input['email']));
     }
     if (isset($input['full_name'])) {
         $sets[] = 'full_name = :full_name';
         $params[':full_name'] = (string)$input['full_name'];
     }
     if (isset($input['role'])) {
-        if (!in_array($input['role'], ['admin', 'manager', 'worker'], true)) {
+        if (!in_array($input['role'], ['admin','manager','worker'], true)) {
             json_response(false, null, 'Недопустимая роль', 422);
         }
         $sets[] = 'role = :role';
@@ -145,28 +127,17 @@ function users_update(PDO $pdo, int $id, array $input): void
         $sets[] = 'password_hash = :hash';
         $params[':hash'] = password_hash((string)$input['password'], PASSWORD_BCRYPT);
     }
+    if (!$sets) json_response(false, null, 'Нет данных для обновления', 422);
 
-    if (!$sets) {
-        json_response(false, null, 'Нет данных для обновления', 422);
-    }
-
-    $sql = 'UPDATE users SET ' . implode(', ', $sets) . ' WHERE id = :id';
+    $sql = 'UPDATE users SET ' . implode(', ', $sets) . ' WHERE id = :id AND company_id = :cid';
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
 }
 
-/**
- * Смена пароля пользователя с проверкой старого.
- * Возвращает ['ok'=>true] или ['ok'=>false,'error'=>string].
- */
 function users_change_password(PDO $pdo, int $userId, string $oldPassword, string $newPassword): array
 {
-    if (mb_strlen($newPassword) < 4) {
-        return ['ok' => false, 'error' => 'Новый пароль должен быть не короче 4 символов'];
-    }
-    if (mb_strlen($newPassword) > 72) {
-        return ['ok' => false, 'error' => 'Новый пароль слишком длинный'];
-    }
+    if (mb_strlen($newPassword) < 4) return ['ok' => false, 'error' => 'Новый пароль должен быть не короче 4 символов'];
+    if (mb_strlen($newPassword) > 72) return ['ok' => false, 'error' => 'Новый пароль слишком длинный'];
 
     $stmt = $pdo->prepare('SELECT password_hash FROM users WHERE id = :id LIMIT 1');
     $stmt->execute([':id' => $userId]);
@@ -177,10 +148,7 @@ function users_change_password(PDO $pdo, int $userId, string $oldPassword, strin
     }
 
     $upd = $pdo->prepare('UPDATE users SET password_hash = :h WHERE id = :id');
-    $upd->execute([
-        ':h'  => password_hash($newPassword, PASSWORD_BCRYPT),
-        ':id' => $userId,
-    ]);
+    $upd->execute([':h' => password_hash($newPassword, PASSWORD_BCRYPT), ':id' => $userId]);
 
     return ['ok' => true];
 }

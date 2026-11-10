@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const roleMap = { admin: 'admin', manager: 'manager', worker: 'worker' };
     const cols = [
       { key: 'id', label: '#' },
-      { key: 'login', label: 'Логин' },
+      { key: 'email', label: 'Email' },,
       { key: 'full_name', label: 'Имя' },
       {
         label: 'Роль',
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const id       = Number(toggleBtn.dataset.toggle);
       const isActive = toggleBtn.dataset.active === '1';
       try {
-        await App.apiPost('api/users.php', { id, is_active: !isActive }, 'PUT');
+        await App.apiPost('api/users.php?action=toggle', { id, is_active: !isActive }, 'PUT');
         App.success(!isActive ? 'Пользователь активирован' : 'Пользователь заблокирован');
         load();
       } catch (err) { App.error(err); }
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     formEdit.reset();
     errEdit.textContent = '';
     formEdit.id.value         = user.id;
-    formEdit.login.value      = user.login;
+    formEdit.email.value      = user.email;
     formEdit.full_name.value  = user.full_name;
     formEdit.role.value       = user.role;
     formEdit.password.value   = '';
@@ -90,11 +90,11 @@ document.addEventListener('DOMContentLoaded', () => {
     errEdit.textContent = '';
 
     const payload = {
-      id:        Number(formEdit.id.value),
-      login:     formEdit.login.value.trim(),
-      full_name: formEdit.full_name.value.trim(),
-      role:      formEdit.role.value,
-      is_active: formEdit.is_active.checked ? 1 : 0,
+        id:        Number(formEdit.id.value),
+        email:     formEdit.email.value.trim().toLowerCase(),
+        full_name: formEdit.full_name.value.trim(),
+        role:      formEdit.role.value,
+        is_active: formEdit.is_active.checked ? 1 : 0,
     };
     if (formEdit.password.value) {
       payload.password = formEdit.password.value;
@@ -128,10 +128,10 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     errCreate.textContent = '';
     const payload = {
-      login:     formCreate.login.value.trim(),
-      password:  formCreate.password.value,
-      full_name: formCreate.full_name.value.trim(),
-      role:      formCreate.role.value,
+        email:     formCreate.email.value.trim().toLowerCase(),
+        password:  formCreate.password.value,
+        full_name: formCreate.full_name.value.trim(),
+        role:      formCreate.role.value,
     };
     try {
       await App.apiPost('api/users.php', payload);

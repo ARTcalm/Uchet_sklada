@@ -3,24 +3,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers.php';
 
-/**
- * Список последних операций (с фильтром по типу).
- */
-/**
- * Список операций с фильтрами и пагинацией.
- * $filters = [
- *   'type'       => 'in'|'out'|'writeoff'|null,
- *   'product_id' => int|null,
- *   'user_id'    => int|null,
- *   'from'       => 'YYYY-MM-DD'|null,
- *   'to'         => 'YYYY-MM-DD'|null,
- * ]
- * Возвращает: ['items' => [...], 'total' => int, 'page' => int, 'per_page' => int]
- */
-function operations_list(PDO $pdo, array $filters, int $limit, int $offset): array
+function operations_list(PDO $pdo, int $companyId, array $filters, int $limit, int $offset): array
 {
-    $where  = [];
-    $params = [];
+    $where  = ['o.company_id = :cid'];
+    $params = [':cid' => $companyId];
 
     if (!empty($filters['type'])) {
         $where[] = 'o.type = :type';
@@ -43,7 +29,7 @@ function operations_list(PDO $pdo, array $filters, int $limit, int $offset): arr
         $params[':to'] = $filters['to'];
     }
 
-    $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+    $whereSql = 'WHERE ' . implode(' AND ', $where);
 
     $countStmt = $pdo->prepare("SELECT COUNT(*) FROM operations o $whereSql");
     $countStmt->execute($params);
@@ -82,9 +68,7 @@ function operations_list(PDO $pdo, array $filters, int $limit, int $offset): arr
         'per_page' => $limit,
     ];
 }
-/**
- * Валидация операции (без обращения к БД).
- */
+
 function validate_operation(array $input): array
 {
     return validate_fields($input, [
@@ -95,11 +79,7 @@ function validate_operation(array $input): array
     ]);
 }
 
-/**
- * Создание операции: меняет products.quantity и пишет operations
- * в ОДНОЙ транзакции. Возвращает ['ok'=>true,'id'=>int] или ['ok'=>false,'error'=>string]
- */
-function operations_create(PDO $pdo, array $input, int $userId): array
+function operations_create(PDO $pdo, array $input, int $userId, int $companyId): array
 {
     $type      = (string)$input['type'];
     $productId = (int)$input['product_id'];
@@ -109,9 +89,11 @@ function operations_create(PDO $pdo, array $input, int $userId): array
     try {
         $pdo->beginTransaction();
 
-        // Блокируем строку товара, чтобы избежать гонок
-        $stmt = $pdo->prepare('SELECT id, quantity FROM products WHERE id = :id FOR UPDATE');
-        $stmt->execute([':id' => $productId]);
+        // Блокируем строку товара, но только своей компании
+        $stmt = $pdo->prepare(
+            'SELECT id, quantity FROM products WHERE id = :id AND company_id = :cid FOR UPDATE'
+        );
+        $stmt->execute([':id' => $productId, ':cid' => $companyId]);
         $product = $stmt->fetch();
 
         if (!$product) {
@@ -139,16 +121,15 @@ function operations_create(PDO $pdo, array $input, int $userId): array
                 return ['ok' => false, 'error' => 'Неизвестный тип операции'];
         }
 
-        // Обновляем остаток
-        $upd = $pdo->prepare('UPDATE products SET quantity = quantity + :d WHERE id = :id');
-        $upd->execute([':d' => $delta, ':id' => $productId]);
+        $upd = $pdo->prepare('UPDATE products SET quantity = quantity + :d WHERE id = :id AND company_id = :cid');
+        $upd->execute([':d' => $delta, ':id' => $productId, ':cid' => $companyId]);
 
-        // Пишем операцию
         $ins = $pdo->prepare(
-            'INSERT INTO operations (type, product_id, qty, comment, user_id, created_at)
-             VALUES (:t, :pid, :qty, :c, :uid, NOW())'
+            'INSERT INTO operations (company_id, type, product_id, qty, comment, user_id, created_at)
+             VALUES (:cid, :t, :pid, :qty, :c, :uid, NOW())'
         );
         $ins->execute([
+            ':cid' => $companyId,
             ':t'   => $type,
             ':pid' => $productId,
             ':qty' => $qty,
@@ -159,42 +140,23 @@ function operations_create(PDO $pdo, array $input, int $userId): array
 
         $pdo->commit();
 
-        return [
-            'ok'       => true,
-            'id'       => $opId,
-            'quantity' => $current + $delta,
-        ];
+        return ['ok' => true, 'id' => $opId, 'quantity' => $current + $delta];
     } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
+        if ($pdo->inTransaction()) $pdo->rollBack();
         error_log('[operation] ' . $e->getMessage());
         return ['ok' => false, 'error' => 'Ошибка при проведении операции'];
     }
 }
 
-/**
- * Удаление операции с откатом её влияния на остаток.
- * Только admin (проверка на уровне API).
- *
- * Логика отката:
- *   in       → остаток уменьшается на qty (нельзя, если станет < 0)
- *   out      → остаток увеличивается на qty
- *   writeoff → остаток увеличивается на qty
- *
- * Возвращает ['ok'=>true, 'product_id'=>int, 'delta'=>float, 'new_quantity'=>float]
- *         или ['ok'=>false, 'error'=>string]
- */
-function operations_delete(PDO $pdo, int $operationId): array
+function operations_delete(PDO $pdo, int $operationId, int $companyId): array
 {
     try {
         $pdo->beginTransaction();
 
-        // Блокируем операцию
         $stmt = $pdo->prepare(
-            'SELECT id, type, product_id, qty FROM operations WHERE id = :id FOR UPDATE'
+            'SELECT id, type, product_id, qty FROM operations WHERE id = :id AND company_id = :cid FOR UPDATE'
         );
-        $stmt->execute([':id' => $operationId]);
+        $stmt->execute([':id' => $operationId, ':cid' => $companyId]);
         $op = $stmt->fetch();
 
         if (!$op) {
@@ -206,9 +168,8 @@ function operations_delete(PDO $pdo, int $operationId): array
         $type      = (string)$op['type'];
         $qty       = (float)$op['qty'];
 
-        // Блокируем товар
-        $stmt = $pdo->prepare('SELECT id, quantity FROM products WHERE id = :id FOR UPDATE');
-        $stmt->execute([':id' => $productId]);
+        $stmt = $pdo->prepare('SELECT id, quantity FROM products WHERE id = :id AND company_id = :cid FOR UPDATE');
+        $stmt->execute([':id' => $productId, ':cid' => $companyId]);
         $product = $stmt->fetch();
 
         if (!$product) {
@@ -217,17 +178,13 @@ function operations_delete(PDO $pdo, int $operationId): array
         }
 
         $current = (float)$product['quantity'];
-
-        // Вычисляем откат
         $delta = 0.0;
+
         switch ($type) {
             case 'in':
                 if ($current < $qty) {
                     $pdo->rollBack();
-                    return [
-                        'ok'    => false,
-                        'error' => 'Невозможно удалить приход: текущий остаток меньше количества операции',
-                    ];
+                    return ['ok' => false, 'error' => 'Невозможно удалить приход: текущий остаток меньше количества операции'];
                 }
                 $delta = -$qty;
                 break;
@@ -240,26 +197,17 @@ function operations_delete(PDO $pdo, int $operationId): array
                 return ['ok' => false, 'error' => 'Неизвестный тип операции'];
         }
 
-        // Откатываем остаток
-        $upd = $pdo->prepare('UPDATE products SET quantity = quantity + :d WHERE id = :id');
-        $upd->execute([':d' => $delta, ':id' => $productId]);
+        $upd = $pdo->prepare('UPDATE products SET quantity = quantity + :d WHERE id = :id AND company_id = :cid');
+        $upd->execute([':d' => $delta, ':id' => $productId, ':cid' => $companyId]);
 
-        // Удаляем операцию
-        $del = $pdo->prepare('DELETE FROM operations WHERE id = :id');
-        $del->execute([':id' => $operationId]);
+        $del = $pdo->prepare('DELETE FROM operations WHERE id = :id AND company_id = :cid');
+        $del->execute([':id' => $operationId, ':cid' => $companyId]);
 
         $pdo->commit();
 
-        return [
-            'ok'           => true,
-            'product_id'   => $productId,
-            'delta'        => $delta,
-            'new_quantity' => $current + $delta,
-        ];
+        return ['ok' => true, 'product_id' => $productId, 'delta' => $delta, 'new_quantity' => $current + $delta];
     } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
+        if ($pdo->inTransaction()) $pdo->rollBack();
         error_log('[operations_delete] ' . $e->getMessage());
         return ['ok' => false, 'error' => 'Ошибка при удалении операции'];
     }

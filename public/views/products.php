@@ -37,7 +37,7 @@ require_once __DIR__ . '/../partials/layout_header.php';
             <div class="form-row" style="display:flex; gap:12px">
                 <div style="flex:1">
                     <label for="pf-quantity">Остаток</label>
-                    <input type="number" id="pf-quantity" name="quantity" min="0" step="1" value="0">
+                    <input type="number" id="pf-quantity" name="quantity" min="0" max="999999999.999" step="0.1" value="0">
                 </div>
                 <div style="flex:1">
                     <label for="pf-min-stock">Мин. остаток</label>
@@ -48,10 +48,6 @@ require_once __DIR__ . '/../partials/layout_header.php';
                 <label for="pf-price">Цена</label>
                 <input type="number" id="pf-price" name="price" min="0" step="0.01" value="0">
             </div>
-            </div>
-            <div class="form-row">
-                <label>Цена</label>
-                <input type="number" name="price" min="0" step="0.01" value="0">
             </div>
             <div class="form-error" id="product-form-error"></div>
         </div>

@@ -88,3 +88,9 @@ function require_role(array $roles, bool $json = true): void
     require __DIR__ . '/../public/views/403.php';
     exit;
 }
+
+function current_company_id(): int
+{
+    $u = current_user();
+    return $u ? (int)($u['company_id'] ?? 0) : 0;
+}

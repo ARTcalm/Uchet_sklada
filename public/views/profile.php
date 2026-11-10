@@ -10,8 +10,8 @@ require_once __DIR__ . '/../partials/layout_header.php';
         <div class="panel-header"><h2>Учётная запись</h2></div>
         <div class="panel-body">
             <div class="profile-field">
-                <div class="profile-label">Логин</div>
-                <div class="profile-value"><?= e($user['login']) ?></div>
+                <div class="profile-label">Email</div>
+                <div class="profile-value"><?= e($user['email']) ?></div>
             </div>
             <div class="profile-field">
                 <div class="profile-label">Имя</div>

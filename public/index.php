@@ -6,10 +6,28 @@ session_start();
 require_once __DIR__ . '/../src/helpers.php';
 require_once __DIR__ . '/../src/auth.php';
 
-$page = $_GET['page'] ?? 'menu';
+// Если параметра page нет — показываем лендинг
+$page = $_GET['page'] ?? 'welcome';
 
+// Если запросили лендинг напрямую
+if ($page === 'welcome') {
+    require __DIR__ . '/views/welcome.php';
+    exit;
+}
+
+// Если это страница логина
 if ($page === 'login') {
     require __DIR__ . '/views/login.php';
+    exit;
+}
+
+if ($page === 'register') {
+    require __DIR__ . '/views/register.php';
+    exit;
+}
+
+if ($page === 'thanks') {
+    require __DIR__ . '/views/thanks.php';
     exit;
 }
 

@@ -6,16 +6,19 @@ require_once __DIR__ . '/../../src/auth.php';
 require_once __DIR__ . '/../../src/db.php';
 require_once __DIR__ . '/../../src/models/audit.php';
 
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 require_login();
 require_role(['admin']); // только admin
 
 try {
     $pdo = db();
+    $cid = current_company_id();
 
-    // Список + фильтры + пагинация
+    // Уникальные значения для фильтров
     if (!empty($_GET['distinct'])) {
-        json_response(true, audit_distinct($pdo));
+        json_response(true, audit_distinct($pdo, $cid));
     }
 
     $filters = [
@@ -30,7 +33,7 @@ try {
     $perPage = min(100, max(1, (int)($_GET['per_page'] ?? 30)));
     $offset  = ($page - 1) * $perPage;
 
-    $data = audit_list($pdo, $filters, $perPage, $offset);
+    $data = audit_list($pdo, $cid, $filters, $perPage, $offset);
     json_response(true, $data);
 } catch (Throwable $e) {
     json_response(false, null, 'Ошибка сервера: ' . $e->getMessage(), 500);

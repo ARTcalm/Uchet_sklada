@@ -19,10 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   showTab('stock');
 
-  // ---------- Отчёт «Остатки» ----------
-  const stockTable  = document.getElementById('stock-table');
-  const stockCat    = document.getElementById('stock-category');
-  const stockExport = document.getElementById('stock-export');
+   // ---------- Отчёт «Остатки» ----------
+  const stockTable   = document.getElementById('stock-table');
+  const stockCat     = document.getElementById('stock-category');
+  const stockProduct = document.getElementById('stock-product');
+  const stockSearch  = document.getElementById('stock-search');
+  const stockExport  = document.getElementById('stock-export');
+  const stockReset   = document.getElementById('stock-reset');
 
   async function loadCategories() {
     try {
@@ -32,10 +35,26 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { /* ignore */ }
   }
 
+  async function loadProductsForFilter() {
+    try {
+      const data = await App.apiGet('api/products.php?search=&page=1&per_page=1000');
+      stockProduct.innerHTML = '<option value="">Все товары</option>' +
+        data.items.map(p => `<option value="${p.id}">${App.esc(p.sku + ' — ' + p.name)}</option>`).join('');
+    } catch (e) { /* ignore */ }
+  }
+
+  function stockQuery() {
+    const qs = new URLSearchParams();
+    if (stockCat.value)     qs.set('category_id', stockCat.value);
+    if (stockProduct.value) qs.set('product_id',  stockProduct.value);
+    if (stockSearch.value.trim()) qs.set('search', stockSearch.value.trim());
+    return qs.toString();
+  }
+
   async function loadStock() {
     try {
-      const qs = stockCat.value ? '&category_id=' + encodeURIComponent(stockCat.value) : '';
-      const data = await App.apiGet('api/reports.php?type=stock' + qs);
+      const qs = stockQuery();
+      const data = await App.apiGet('api/reports.php?type=stock' + (qs ? '&' + qs : ''));
       renderStock(data.rows || []);
     } catch (e) { App.error(e); }
   }
@@ -57,10 +76,23 @@ document.addEventListener('DOMContentLoaded', () => {
     stockTable.innerHTML = App.renderTable(rows, cols);
   }
 
+  // Дебаунс для поиска, чтобы не дёргать сервер на каждое нажатие
+  const debouncedStockSearch = App.debounce(loadStock, 300);
+
+  stockSearch.addEventListener('input', debouncedStockSearch);
   stockCat.addEventListener('change', loadStock);
+  stockProduct.addEventListener('change', loadStock);
+
+  stockReset.addEventListener('click', () => {
+    stockSearch.value = '';
+    stockCat.value = '';
+    stockProduct.value = '';
+    loadStock();
+  });
+
   stockExport.addEventListener('click', () => {
-    const qs = stockCat.value ? '&category_id=' + encodeURIComponent(stockCat.value) : '';
-    window.location.href = 'api/reports.php?type=export_stock' + qs;
+    const qs = stockQuery();
+    window.location.href = 'api/reports.php?type=export_stock' + (qs ? '&' + qs : '');
   });
 
   // ---------- Отчёт «Движение» ----------
@@ -115,8 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = 'api/reports.php?type=export_movement&' + movementQs();
   });
 
-  // Инициализация
+
   loadCategories();
   loadProducts();
+  loadProductsForFilter();
   loadStock();
 });

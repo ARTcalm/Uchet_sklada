@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     if (canDelete) {
       cols.push({
-        label: '',
+        label: 'Действие',
         render: r => `<button class="btn btn-danger btn-sm" data-del="${r.id}" title="Удалить">🗑</button>`,
       });
     }
@@ -147,14 +147,17 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     formErr.textContent = '';
 
-    const payload = {
-      type:       typeSel.value,
-      product_id: Number(select.value || 0),
-      qty:        Number(form.qty.value || 0),
-      comment:    form.comment.value.trim(),
-    };
-    if (!payload.product_id) { formErr.textContent = 'Выберите товар'; return; }
-    if (!(payload.qty > 0))  { formErr.textContent = 'Количество должно быть > 0'; return; }
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+      const payload = {
+        type:       typeSel.value,
+        product_id: Number(select.value || 0),
+        qty:        Number(form.qty.value || 0),
+        comment:    form.comment.value.trim(),
+      };
+    if (!payload.product_id) { formErr.textContent = 'Выберите товар'; if (submitBtn) submitBtn.disabled = false; return; }
+    if (!(payload.qty > 0))  { formErr.textContent = 'Количество должно быть > 0'; if (submitBtn) submitBtn.disabled = false; return; }
 
     try {
       await App.apiPost('api/operations.php', payload);
@@ -164,6 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
       loadOperations();
     } catch (err) {
       formErr.textContent = err.message;
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
     }
   });
 

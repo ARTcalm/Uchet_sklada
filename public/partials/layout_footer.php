@@ -1,6 +1,14 @@
 <?php
 declare(strict_types=1);
 ?>
+        <?php if (!empty($nextPage)): ?>
+            <div class="next-page-wrap">
+                <a class="next-page-btn" href="?page=<?= urlencode($nextPage['key']) ?>" title="Перейти: <?= e($nextPage['label']) ?>">
+                    <span class="next-page-label"><?= e($nextPage['label']) ?></span>
+                    <span class="next-page-arrow">→</span>
+                </a>
+            </div>
+        <?php endif; ?>
     </main>
 
 <script src="assets/app.js"></script>

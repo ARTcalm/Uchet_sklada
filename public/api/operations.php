@@ -6,13 +6,17 @@ require_once __DIR__ . '/../../src/auth.php';
 require_once __DIR__ . '/../../src/db.php';
 require_once __DIR__ . '/../../src/models/operations.php';
 
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 require_login();
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
     $pdo = db();
+    $cid = current_company_id();
+    $uid = current_user_id();
 
     if ($method === 'GET') {
         $filters = [
@@ -23,16 +27,16 @@ try {
             'to'         => sanitize($_GET['to'] ?? ''),
         ];
 
-        // worker видит только свои операции (если явно не запрошено иное)
+        // worker видит только свои операции
         if (current_role() === 'worker' && empty($_GET['all'])) {
-            $filters['user_id'] = current_user_id();
+            $filters['user_id'] = $uid;
         }
 
         $page    = max(1, (int)($_GET['page'] ?? 1));
         $perPage = min(200, max(1, (int)($_GET['per_page'] ?? 50)));
         $offset  = ($page - 1) * $perPage;
 
-        $data = operations_list($pdo, $filters, $perPage, $offset);
+        $data = operations_list($pdo, $cid, $filters, $perPage, $offset);
         json_response(true, $data);
     }
 
@@ -45,12 +49,12 @@ try {
             json_response(false, null, implode('; ', $errors), 422);
         }
 
-        $result = operations_create($pdo, $input, current_user_id());
+        $result = operations_create($pdo, $input, $uid, $cid);
         if (empty($result['ok'])) {
             json_response(false, null, $result['error'] ?? 'Ошибка операции', 400);
         }
 
-        log_action($pdo, current_user_id(), 'create', 'operations', (int)$result['id']);
+        log_action($pdo, $uid, 'create', 'operations', (int)$result['id']);
         json_response(true, $result);
     }
 
@@ -63,12 +67,13 @@ try {
         if ($id <= 0) {
             json_response(false, null, 'Не указан id операции', 422);
         }
-        $result = operations_delete($pdo, $id);
+
+        $result = operations_delete($pdo, $id, $cid);
         if (empty($result['ok'])) {
             json_response(false, null, $result['error'] ?? 'Ошибка удаления', 400);
         }
 
-        log_action($pdo, current_user_id(), 'delete', 'operations', $id);
+        log_action($pdo, $uid, 'delete', 'operations', $id);
         json_response(true, $result);
     }
 

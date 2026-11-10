@@ -164,14 +164,27 @@ function verify_csrf(?string $token = null): void
  * @param string $entity  users|products|operations|...
  * @param int    $entityId
  */
-function log_action(PDO $pdo, int $userId, string $action, string $entity, int $entityId): void
+function log_action(PDO $pdo, int $userId, string $action, string $entity, int $entityId, ?int $companyId = null): void
 {
     try {
+        if ($companyId === null) {
+            // Пытаемся взять из сессии, не зависим от auth.php
+            if (session_status() === PHP_SESSION_ACTIVE && !empty($_SESSION['user']['company_id'])) {
+                $companyId = (int)$_SESSION['user']['company_id'];
+            } else {
+                $companyId = 0;
+            }
+        }
+        // Если company_id = 0 — пропускаем запись (нельзя вставить NULL/0 при FK)
+        if ($companyId <= 0) {
+            return;
+        }
         $stmt = $pdo->prepare(
-            'INSERT INTO audit_log (user_id, action, entity, entity_id, created_at)
-             VALUES (:uid, :action, :entity, :eid, NOW())'
+            'INSERT INTO audit_log (company_id, user_id, action, entity, entity_id, created_at)
+             VALUES (:cid, :uid, :action, :entity, :eid, NOW())'
         );
         $stmt->execute([
+            ':cid'    => $companyId,
             ':uid'    => $userId,
             ':action' => $action,
             ':entity' => $entity,

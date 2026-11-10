@@ -44,6 +44,19 @@ $pageTitle = $menu[$current]['label'] ?? $extraTitles[$current] ?? 'Склад';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/style.css">
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=114161247', 'ym');
+
+        ym(114161247, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/114161247" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- /Yandex.Metrika counter -->
     <script>
         (function () {
             try {
@@ -87,6 +100,7 @@ $pageTitle = $menu[$current]['label'] ?? $extraTitles[$current] ?? 'Склад';
 <aside class="drawer" id="drawer">
     <div class="drawer-header">
         <div class="drawer-user">
+            <div class="drawer-user-company"><?= e($user['company_name'] ?? 'Склад') ?></div>
             <div class="drawer-user-name"><?= e($user['full_name']) ?></div>
             <div class="drawer-user-role"><?= e($user['role']) ?></div>
         </div>
@@ -110,11 +124,9 @@ $pageTitle = $menu[$current]['label'] ?? $extraTitles[$current] ?? 'Склад';
     </div>
 </aside>
 
-<?php if ($nextPage): ?>
-    <a class="next-page-btn" href="?page=<?= urlencode($nextPage['key']) ?>" title="Перейти: <?= e($nextPage['label']) ?>">
-        <span class="next-page-arrow">→</span>
-        <span class="next-page-label"><?= e($nextPage['label']) ?></span>
-    </a>
-<?php endif; ?>
-
 <main class="main">
+<?php if (!empty($user['company_name'])): ?>
+    <div class="company-bar">
+        <span class="company-bar-name"><?= e($user['company_name']) ?></span>
+    </div>
+<?php endif; ?>

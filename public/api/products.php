@@ -7,13 +7,17 @@ require_once __DIR__ . '/../../src/db.php';
 require_once __DIR__ . '/../../src/models/products.php';
 require_once __DIR__ . '/../../src/models/reports.php';
 
-session_start();
-
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 require_login();
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
     $pdo = db();
+    $cid = current_company_id();
+    $uid = current_user_id();
 
     if ($method === 'GET') {
         // Категории для селекта
@@ -23,14 +27,14 @@ try {
 
         // Один товар
         if (!empty($_GET['id'])) {
-            $product = products_get($pdo, (int)$_GET['id']);
+            $product = products_get($pdo, (int)$_GET['id'], $cid);
             if (!$product) {
                 json_response(false, null, 'Товар не найден', 404);
             }
 
             // ?id=X&detail=1 — детальная информация (график, операции, audit)
             if (!empty($_GET['detail'])) {
-                $detail = reports_product_detail($pdo, (int)$_GET['id']);
+                $detail = reports_product_detail($pdo, (int)$_GET['id'], $cid);
                 json_response(true, array_merge(['product' => $product], $detail));
             }
 
@@ -43,7 +47,7 @@ try {
         $perPage = min(100, max(1, (int)($_GET['per_page'] ?? 20)));
         $offset  = ($page - 1) * $perPage;
 
-        $data = products_list($pdo, $search, $perPage, $offset);
+        $data = products_list($pdo, $cid, $search, $perPage, $offset);
         json_response(true, $data);
     }
 
@@ -58,8 +62,8 @@ try {
             json_response(false, null, implode('; ', $errors), 422);
         }
 
-        $id = products_create($pdo, $input);
-        log_action($pdo, current_user_id(), 'create', 'products', $id);
+        $id = products_create($pdo, $input, $cid);
+        log_action($pdo, $uid, 'create', 'products', $id);
         json_response(true, ['id' => $id]);
     }
 
@@ -71,13 +75,14 @@ try {
         if ($id <= 0) {
             json_response(false, null, 'Не указан id', 422);
         }
+
         $errors = validate_product($input, $id);
         if ($errors) {
             json_response(false, null, implode('; ', $errors), 422);
         }
 
-        products_update($pdo, $id, $input);
-        log_action($pdo, current_user_id(), 'update', 'products', $id);
+        products_update($pdo, $id, $cid, $input);
+        log_action($pdo, $uid, 'update', 'products', $id);
         json_response(true, ['id' => $id]);
     }
 
@@ -89,8 +94,9 @@ try {
         if ($id <= 0) {
             json_response(false, null, 'Не указан id', 422);
         }
-        products_delete($pdo, $id);
-        log_action($pdo, current_user_id(), 'delete', 'products', $id);
+
+        products_delete($pdo, $id, $cid);
+        log_action($pdo, $uid, 'delete', 'products', $id);
         json_response(true, ['id' => $id]);
     }
 

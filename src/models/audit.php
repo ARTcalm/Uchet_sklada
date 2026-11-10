@@ -6,10 +6,10 @@ require_once __DIR__ . '/../helpers.php';
 /**
  * Список audit-записей с фильтрами и пагинацией.
  */
-function audit_list(PDO $pdo, array $filters, int $limit, int $offset): array
+function audit_list(PDO $pdo, int $companyId, array $filters, int $limit, int $offset): array
 {
-    $where  = [];
-    $params = [];
+    $where  = ['a.company_id = :cid'];
+    $params = [':cid' => $companyId];
 
     if (!empty($filters['user_id'])) {
         $where[] = 'a.user_id = :uid';
@@ -40,8 +40,8 @@ function audit_list(PDO $pdo, array $filters, int $limit, int $offset): array
 
     $sql = "
         SELECT a.id, a.user_id, a.action, a.entity, a.entity_id, a.created_at,
-               COALESCE(u.full_name, '—') AS user_name,
-               u.login AS user_login
+            COALESCE(u.full_name, '—') AS user_name,
+            u.email AS user_email
         FROM audit_log a
         LEFT JOIN users u ON u.id = a.user_id
         $whereSql
@@ -75,9 +75,15 @@ function audit_list(PDO $pdo, array $filters, int $limit, int $offset): array
 /**
  * Уникальные значения action / entity для фильтров.
  */
-function audit_distinct(PDO $pdo): array
+function audit_distinct(PDO $pdo, int $companyId): array
 {
-    $actions  = $pdo->query('SELECT DISTINCT action  FROM audit_log ORDER BY action')->fetchAll(PDO::FETCH_COLUMN);
-    $entities = $pdo->query('SELECT DISTINCT entity  FROM audit_log ORDER BY entity')->fetchAll(PDO::FETCH_COLUMN);
+    $stmt = $pdo->prepare('SELECT DISTINCT action FROM audit_log WHERE company_id = :cid ORDER BY action');
+    $stmt->execute([':cid' => $companyId]);
+    $actions = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    $stmt = $pdo->prepare('SELECT DISTINCT entity FROM audit_log WHERE company_id = :cid ORDER BY entity');
+    $stmt->execute([':cid' => $companyId]);
+    $entities = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
     return ['actions' => $actions, 'entities' => $entities];
 }
