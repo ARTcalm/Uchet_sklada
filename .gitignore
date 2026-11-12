@@ -2,4 +2,6 @@ etalon/
 etaloncopy/
 manifest.sha256
 seed.sql
+warehouse.sql
 baseline/
+baseline_2/

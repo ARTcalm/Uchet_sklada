@@ -78,7 +78,7 @@ try {
         case 'me':
             json_response(true, [
                 'user' => $_SESSION['user'] ?? null,
-                'csrf' => $_SESSION['csrf'] ?? null,
+                'csrf' => csrf_token(),   // ← генерирует токен, если его ещё нет
             ]);
             break;
 

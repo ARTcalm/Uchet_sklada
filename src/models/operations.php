@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers.php';
 
+
 function operations_list(PDO $pdo, int $companyId, array $filters, int $limit, int $offset): array
 {
     $where  = ['o.company_id = :cid'];

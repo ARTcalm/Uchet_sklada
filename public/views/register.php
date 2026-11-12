@@ -10,6 +10,19 @@ $csrf = csrf_token();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Регистрация склада — Склад</title>
     <link rel="stylesheet" href="assets/style.css">
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=114161247', 'ym');
+
+        ym(114161247, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/114161247" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- /Yandex.Metrika counter -->
 </head>
 <body class="login-page">
 <main class="login-wrap">
@@ -80,14 +93,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (payload.password.length < 6) { err.textContent = 'Пароль должен быть не короче 6 символов'; return; }
 
     try {
-      const res  = await fetch('api/register.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'Ошибка регистрации');
-      window.location.href = data.data.redirect || '?page=thanks';
+        const res  = await fetch('api/register.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Ошибка регистрации');
+
+        if (window.ym) {
+        window.ym(114161247, 'reachGoal', 'form_submit');
+        }
+        window.location.href = data.data.redirect || '?page=thanks';
     } catch (e2) {
       err.textContent = e2.message;
     }

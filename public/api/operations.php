@@ -36,6 +36,8 @@ try {
         $perPage = min(200, max(1, (int)($_GET['per_page'] ?? 50)));
         $offset  = ($page - 1) * $perPage;
 
+        error_log("DEBUG: operations list. from = " . ($_GET['from'] ?? 'null') . ", to = " . ($_GET['to'] ?? 'null'));
+
         $data = operations_list($pdo, $cid, $filters, $perPage, $offset);
         json_response(true, $data);
     }

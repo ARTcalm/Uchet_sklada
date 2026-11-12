@@ -138,6 +138,9 @@ function products_update(PDO $pdo, int $id, int $companyId, array $input): void
         ':id'    => $id,
         ':cid'   => $companyId,
     ]);
+
+    // ВОТ СЮДА ЕЕ НУЖНО ПОСТАВИТЬ:
+    error_log("DEBUG: products_update executed. rowCount = " . $stmt->rowCount());
 }
 
 function products_delete(PDO $pdo, int $id, int $companyId): void

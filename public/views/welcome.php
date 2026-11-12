@@ -12,6 +12,7 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="yandex-verification" content="5e800c5e5667a52a" />
     <title>Склад — учёт товаров без Excel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +40,7 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
             transition: background 0.3s;
         }
         html[data-theme="dark"] .topbar { background: rgba(30, 41, 59, 0.85); }
-        
+        section {scroll-margin-top: 90px;}
         .logo {
             display: flex; align-items: center; gap: 10px;
             font-weight: 700; font-size: 20px;
@@ -184,11 +185,11 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
             m[i].l=1*new Date();
             for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
             k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=114161247', 'ym');
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=114173620', 'ym');
 
-        ym(114161247, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+        ym(114173620, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
     </script>
-    <noscript><div><img src="https://mc.yandex.ru/watch/114161247" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <noscript><div><img src="https://mc.yandex.ru/watch/114173620" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     <!-- /Yandex.Metrika counter -->
 </head>
 <body>
@@ -206,8 +207,10 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
     <nav class="nav-links" id="nav-links">
         <div class="nav-indicator" id="nav-indicator"></div>
         <a href="#hero" class="active">О программе</a>
+        <a href="#industries">Для бизнеса</a>
         <a href="#gallery">Как работает</a>
         <a href="#pricing">Тарифы</a>
+        <a href="#vs">Почему мы</a>
         <a href="#testimonials">Отзывы</a>
         <a href="#faq">FAQ</a>
         <a href="?page=register" class="btn btn-primary btn-sm" id="reg-btn">Регистрация</a>
@@ -225,7 +228,7 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
         <h1 class="landing-title">Учёт склада без хаоса и Excel</h1>
         <p class="landing-subtitle">
             Простая система для контроля остатков, прихода и расхода товаров. 
-            Наведите порядок на складе за 5 минут. Никаких сложных настроек и скрытых платежей.
+            Наведите порядок на складе за 15 минут. Никаких сложных настроек и скрытых платежей.
         </p>
 
         <div class="landing-cta">
@@ -257,6 +260,34 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
                 <div class="feature-icon">👥</div>
                 <div class="feature-title">Роли и доступы</div>
                 <div class="feature-text">Администратор, менеджер и кладовщик видят только то, что им положено. История действий ведётся автоматически.</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="industries" style="margin-bottom: 80px;">
+        <h2 style="font-size: 32px; margin-bottom: 16px;">Подходит для</h2>
+        <p class="landing-subtitle">Система гибко настраивается под задачи разных сфер бизнеса.</p>
+
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🛒</div>
+                <div class="feature-title">Интернет-магазин</div>
+                <div class="feature-text">Учёт остатков по SKU, приёмка и отгрузка. Отчёты по движению товаров для маркетплейсов.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📦</div>
+                <div class="feature-title">Оптовая торговля</div>
+                <div class="feature-text">Массовые приходы и отгрузки, контроль минимальных остатков, отчёты для закупщика.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏭</div>
+                <div class="feature-title">Производство</div>
+                <div class="feature-text">Учёт материалов и комплектующих, списание в производство, история операций по партиям.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏪</div>
+                <div class="feature-title">Розница</div>
+                <div class="feature-text">Простой приход/расход, печать ценников вручную, отчёты по выручке за день.</div>
             </div>
         </div>
     </section>
@@ -317,6 +348,36 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
         </div>
     </section>
 
+    <section id="vs" style="margin-bottom: 80px;">
+        <h2 style="font-size: 32px; margin-bottom: 16px;">Почему проще, чем у других</h2>
+        <p class="landing-subtitle">
+            Если вы уже устали от внедрения и обучения в тяжёлых системах — вот чем «Склад» отличается.
+        </p>
+
+        <div class="features" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Без внедрения</div>
+                <div class="feature-text">Регистрация и работа через браузер с первого дня. Не нужно ставить сервер и настраивать базу.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💸</div>
+                <div class="feature-title">Дешевле</div>
+                <div class="feature-text">От 0 ₽/мес на тарифе «Старт». Никаких лицензий и «коробок» за сотни тысяч.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <div class="feature-title">Разграничение доступа</div>
+                <div class="feature-text">Три роли: Администратор, Менеджер, Кладовщик. Кладовщик видит только приход и расход — не может изменить цены.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📜</div>
+                <div class="feature-title">Журнал действий</div>
+                <div class="feature-text">Каждое действие фиксируется. Видно, кто и когда изменил товар, цену или остаток.</div>
+            </div>
+        </div>
+    </section>
+
     <section id="testimonials" class="testimonials">
         <h2 style="font-size: 32px;">Нам доверяют</h2>
         <div class="testimonial-grid">
@@ -362,6 +423,10 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
         <div class="faq-item">
             <div class="faq-question">Можно ли экспортировать данные? <span class="faq-icon">+</span></div>
             <div class="faq-answer">Конечно. В разделе «Отчёты» есть кнопка «Экспорт CSV». Выгрузить можно как текущие остатки, так и движения товаров за любой период.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question">Можно ли перейти с 1С или МойСклад? <span class="faq-icon">+</span></div>
+            <div class="faq-answer">Да. Достаточно выгрузить список товаров в CSV и загрузить в «Склад». Остатки и цены сохранятся. Миграция занимает 15–30 минут, поддержка помогает с переносом бесплатно.</div>
         </div>
     </section>
 </main>

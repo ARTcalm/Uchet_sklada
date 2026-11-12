@@ -61,9 +61,9 @@ function companies_register(PDO $pdo, array $input): array
 
         $pdo->commit();
         return ['ok' => true, 'company_id' => $companyId, 'user_id' => $userId];
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
-        error_log('[register] ' . $e->getMessage());
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log("DEBUG: companies_register PDOException: " . $e->getMessage());
         return ['ok' => false, 'error' => 'Не удалось зарегистрировать компанию'];
     }
 }
