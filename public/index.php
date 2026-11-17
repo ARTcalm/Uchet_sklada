@@ -15,31 +15,26 @@ if ($page === 'welcome') {
     exit;
 }
 
-// Если это страница логина
-if ($page === 'login') {
-    require __DIR__ . '/views/login.php';
-    exit;
+// Публичные страницы (доступны без авторизации)
+$publicPages = ['login', 'register', 'thanks', 'blog'];
+if (in_array($page, $publicPages, true)) {
+    $file = __DIR__ . '/views/' . $page . '.php';
+    if (file_exists($file)) {
+        require $file;
+        exit;
+    }
 }
 
-if ($page === 'register') {
-    require __DIR__ . '/views/register.php';
-    exit;
-}
-
-if ($page === 'thanks') {
-    require __DIR__ . '/views/thanks.php';
-    exit;
-}
-
+// Проверка авторизации для защищенных страниц
 if (!is_logged_in()) {
     header('Location: ?page=login');
     exit;
 }
 
-$allowedPages = ['menu', 'dashboard', 'products', 'product', 'operations', 'users', 'reports', 'audit', 'profile'];
+$allowedPages = ['menu', 'dashboard', 'products', 'product', 'operations', 'users', 'reports', 'audit', 'profile', 'welcome'];
 if (!in_array($page, $allowedPages, true)) {
     http_response_code(404);
-    echo 'Страница не найдена';
+    require __DIR__ . '/views/404.php'; // <-- Изменено здесь
     exit;
 }
 
@@ -53,6 +48,7 @@ $pageRoles = [
     'reports'    => ['admin', 'manager'],
     'audit'      => ['admin'],
     'profile'    => ['admin', 'manager', 'worker'],
+    'welcome'    => ['admin', 'manager', 'worker'],
 ];
 if (!has_role($pageRoles[$page])) {
     http_response_code(403);

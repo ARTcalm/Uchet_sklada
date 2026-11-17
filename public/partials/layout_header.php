@@ -121,6 +121,7 @@ $pageTitle = $menu[$current]['label'] ?? $extraTitles[$current] ?? 'Склад';
     </nav>
 
     <div class="drawer-footer">
+        <a class="btn btn-ghost" style="width:100%" href="?page=welcome">Вернуться на главную</a>
         <button type="button" class="btn btn-ghost" style="width:100%" onclick="App.logout()">Выйти</button>
     </div>
 </aside>

@@ -49,25 +49,40 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
         }
         .logo svg { width: 32px; height: 32px; color: var(--primary); }
         
-        /* --- Навигация с анимацией --- */
+                /* --- Навигация с анимацией и прокруткой --- */
         .nav-links {
             position: relative;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            background: var(--bg); /* Легкий фон для контейнера, чтобы кнопки выделялись */
-            padding: 6px;
+            background: var(--bg);
             border-radius: 40px;
             border: 1px solid var(--border);
+            padding: 6px; 
             z-index: 1;
+            /* Увеличили ширину, чтобы 4 вкладки влезали целиком */
+            width: 640px; 
+            overflow: hidden; 
+            /* Добавили легкую тень для объема */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
+        
         html[data-theme="dark"] .nav-links { background: #0f172a; }
 
-        /* Подложка, которая будет ездить */
+        .nav-scroll-wrapper {
+            position: relative;
+            display: flex;
+            gap: 4px; /* Уменьшили расстояние между кнопками, чтобы влезло больше */
+            align-items: center;
+            /* Плавная прокрутка */
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            width: max-content; 
+            padding-left: 6px; /* Отступ слева, чтобы первая кнопка не прилипала */
+            padding-right: 20px; /* Отступ справа, чтобы последняя кнопка выезжала с запасом */
+        }
+
+        /* Подложка (ползунок) */
         .nav-indicator {
             position: absolute;
-            top: 6px;
-            bottom: 6px;
+            top: 0; 
+            bottom: 0;
             left: 0;
             background: var(--primary);
             border-radius: 30px;
@@ -75,20 +90,31 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
             z-index: -1;
             box-shadow: 0 4px 12px rgba(79,70,229,.3);
             pointer-events: none;
-            opacity: 0; /* Скрыта, пока не загрузится JS */
+            opacity: 0;
+            height: 100%; 
         }
 
-        .nav-links a {
+        /* Стили ссылок */
+        .nav-links a, .nav-btn{
             position: relative;
             color: var(--text-muted);
             font-weight: 500;
             font-size: 15px;
             text-decoration: none;
-            padding: 8px 20px;
+            padding: 10px 18px; /* Сделали кнопки чуть шире и выше */
             border-radius: 30px;
             transition: color 0.3s ease;
             z-index: 2;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn{
+            background: var(--bg);
+            border-radius: 40px;
+            border: 1px solid var(--border);
         }
         
         .nav-links a:hover { color: var(--text); }
@@ -177,6 +203,118 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
             .price-card.popular:hover { transform: translateY(-4px); }
             .topbar { padding: 0 20px; }
         }
+                /* --- CTA Блок в конце страницы --- */
+        .cta-section {
+            max-width: 1200px;
+            margin: 40px auto 80px;
+            padding: 0 20px;
+        }
+
+        .cta-container {
+            background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--primary-soft) 100%);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 60px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Добавляем фоновые пятна для красоты */
+        .cta-container::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            background: var(--primary);
+            filter: blur(100px);
+            opacity: 0.15;
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .cta-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        .cta-text {
+            font-size: 16px;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .cta-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(79, 70, 229, 0.4);
+            color: #fff;
+            background: var(--primary-hover)
+        }
+
+        .cta-graphic {
+            position: relative;
+            z-index: 1;
+            color: var(--primary);
+            opacity: 0.2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cta-graphic svg {
+            width: 200px;
+            height: 200px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Адаптив для мобилок */
+        @media (max-width: 900px) {
+            .cta-container {
+                flex-direction: column;
+                text-align: center;
+                padding: 40px 20px;
+            }
+            .cta-content {
+                text-align: center;
+            }
+            .cta-title {
+                font-size: 28px;
+            }
+            .cta-graphic {
+                display: none; /* Скрываем большую иконку на мобильных, чтобы не мешала */
+            }
+        }
     </style>
     <!-- Yandex.Metrika counter -->
     <script type="text/javascript">
@@ -203,18 +341,20 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
         </svg>
         Склад
     </a>
-
     <nav class="nav-links" id="nav-links">
+        <div class="nav-scroll-wrapper" id="nav-scroll-wrapper">
+            <a href="?page=blog" class="nav-btn">Блог</a>
         <div class="nav-indicator" id="nav-indicator"></div>
-        <a href="#hero" class="active">О программе</a>
-        <a href="#industries">Для бизнеса</a>
-        <a href="#gallery">Как работает</a>
-        <a href="#pricing">Тарифы</a>
-        <a href="#vs">Почему мы</a>
-        <a href="#testimonials">Отзывы</a>
-        <a href="#faq">FAQ</a>
-        <a href="?page=register" class="btn btn-primary btn-sm" id="reg-btn">Регистрация</a>
-    </nav>
+            <a href="#hero" class="active">О программе</a>
+            <a href="#industries">Для бизнеса</a>
+            <a href="#gallery">Как работает</a>
+            <a href="#pricing">Тарифы</a>
+            <a href="#vs">Почему мы</a>
+            <a href="#testimonials">Отзывы</a>
+            <a href="#faq">FAQ</a>
+            <a href="#reg">Регистрация</a>
+        </div>
+    </nav>    
 
     <div class="topbar-actions">
         <button type="button" class="theme-btn" id="theme-toggle" aria-label="Тема" title="Сменить тему">
@@ -429,6 +569,22 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
             <div class="faq-answer">Да. Достаточно выгрузить список товаров в CSV и загрузить в «Склад». Остатки и цены сохранятся. Миграция занимает 15–30 минут, поддержка помогает с переносом бесплатно.</div>
         </div>
     </section>
+    <section class="cta-section" id="reg">
+        <div class="cta-container">
+            <div class="cta-content">
+                <h2 class="cta-title">Готовы навести порядок на складе?</h2>
+                <p class="cta-text">Присоединяйтесь к сотням бизнесов, которые уже забыли про хаос в Excel. Попробуйте тариф «Старт» абсолютно бесплатно.</p>
+                <a href="?page=register&plan=start" class="btn btn-large cta-btn">Создать аккаунт бесплатно</a>
+            </div>
+            <div class="cta-graphic">
+                <!-- Красивая SVG-иконка коробки/склада для визуала -->
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 8L12 3L3 8M21 8V16L12 21M21 8L12 13M12 13V21M12 13L3 8M3 8V16L12 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M7 10.5L12 8L17 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+                </svg>
+            </div>
+        </div>
+    </section>
 </main>
 
 <footer class="landing-footer">
@@ -495,31 +651,50 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
         });
     });
 
-    // --- МАГИЧЕСКАЯ ПОДЛОЖКА (АБСОЛЮТНАЯ СИНХРОНИЗАЦИЯ) ---
+        // --- МАГИЧЕСКАЯ ПОДЛОЖКА (АБСОЛЮТНАЯ СИНХРОНИЗАЦИЯ + ПРОКРУТКА) ---
     const navLinks = document.querySelectorAll('.nav-links a');
     const indicator = document.getElementById('nav-indicator');
     const navContainer = document.getElementById('nav-links');
+    const scrollWrapper = document.getElementById('nav-scroll-wrapper');
     const sections = document.querySelectorAll('section');
 
-    let isClicking = false; // Флаг, чтобы отключить скролл-спай во время клика
+    let isClicking = false; 
     let clickTimeout;
 
-    function moveIndicator(element) {
-        if (!element) return;
+    function updateNavState(activeElement) {
+        if (!activeElement) return;
         
-        // offsetLeft дает точную позицию внутри контейнера, минус padding контейнера (6px)
-        const left = element.offsetLeft;
-        const width = element.offsetWidth;
+        // 1. Двигаем "ползунок" под активной кнопкой
+        const left = activeElement.offsetLeft;
+        const width = activeElement.offsetWidth;
         
         indicator.style.opacity = '1';
         indicator.style.width = `${width}px`;
         indicator.style.transform = `translateX(${left}px)`;
+
+        // 2. Логика прокрутки контейнера (карусель)
+        const containerWidth = navContainer.offsetWidth;
+        const containerCenter = containerWidth / 2;
+        const elementCenter = left + (width / 2);
+
+        // Вычисляем, насколько нужно сдвинуть весь контейнер, чтобы активная кнопка была по центру (или ближе к нему)
+        let translateX = containerCenter - elementCenter;
+
+        // Ограничители, чтобы контейнер не уезжал за свои пределы
+        const maxTranslate = 0; // Не даем уехать вправо дальше начала
+        const minTranslate = -(scrollWrapper.offsetWidth - containerWidth); // Не даем уехать влево дальше конца
+
+        // Применяем ограничения
+        if (translateX > maxTranslate) translateX = maxTranslate;
+        if (translateX < minTranslate) translateX = minTranslate;
+
+        // Применяем сдвиг к обертке
+        scrollWrapper.style.transform = `translateX(${translateX}px)`;
     }
 
     // 1. Клик по меню
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-            // Блокируем Scroll Spy на 800мс (время плавного скролла)
             isClicking = true;
             clearTimeout(clickTimeout);
             clickTimeout = setTimeout(() => { isClicking = false; }, 800);
@@ -527,21 +702,22 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
             navLinks.forEach(l => l.classList.remove('active'));
             this.classList.add('active');
             
-            // Форсируем перерисовку перед сменой transform, чтобы браузер не "клеил" анимации
+            // Форсируем перерисовку
             void indicator.offsetWidth; 
             
-            moveIndicator(this);
+            updateNavState(this);
         });
     });
 
-    // 2. Инициализация
+    // 2. Инициализация при загрузке
     window.addEventListener('load', () => {
         const active = document.querySelector('.nav-links a.active');
-        if (active) moveIndicator(active);
+        if (active) updateNavState(active);
         
+        // При ресайзе пересчитываем позиции
         window.addEventListener('resize', () => {
             const currentActive = document.querySelector('.nav-links a.active');
-            if (currentActive) moveIndicator(currentActive);
+            if (currentActive) updateNavState(currentActive);
         });
     });
 
@@ -549,7 +725,7 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
     let lastActiveId = 'hero';
 
     window.addEventListener('scroll', () => {
-        if (isClicking) return; // Если идет клик — игнорируем скролл
+        if (isClicking) return;
 
         let currentId = 'hero';
         
@@ -567,12 +743,11 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
                 link.classList.remove('active');
                 if (link.getAttribute('href') === `#${currentId}`) {
                     link.classList.add('active');
-                    moveIndicator(link);
+                    updateNavState(link); // При скролле тоже двигаем карусель
                 }
             });
         }
     });
 </script>
-
 </body>
 </html>
