@@ -80,69 +80,66 @@ function validate_operation(array $input): array
     ]);
 }
 
+/**
+ * Получает товар и блокирует строку для обновления.
+ * Возвращает массив с данными товара или null, если не найден.
+ */
+function get_product_for_update(PDO $pdo, int $productId, int $companyId): ?array
+{
+    $stmt = $pdo->prepare(
+        'SELECT id, quantity FROM products WHERE id = :id AND company_id = :cid FOR UPDATE'
+    );
+    $stmt->execute([':id' => $productId, ':cid' => $companyId]);
+    $product = $stmt->fetch();
+    return $product ?: null;
+}
+
+/**
+ * Вычисляет изменение остатка (delta) в зависимости от типа операции.
+ * Возвращает delta или массив с ошибкой.
+ */
+function calculate_delta(string $type, float $qty, float $currentQuantity): array
+{
+    switch ($type) {
+        case 'in':
+            return ['ok' => true, 'delta' => $qty];
+        case 'out':
+        case 'writeoff':
+            if ($currentQuantity < $qty) {
+                return ['ok' => false, 'error' => 'Недостаточно товара'];
+            }
+            return ['ok' => true, 'delta' => -$qty];
+        default:
+            return ['ok' => false, 'error' => 'Неизвестный тип операции'];
+    }
+}
+
+/**
+ * Создание операции прихода/расхода/списания.
+ */
 function operations_create(PDO $pdo, array $input, int $userId, int $companyId): array
 {
     $type      = (string)$input['type'];
     $productId = (int)$input['product_id'];
     $qty       = (float)$input['qty'];
     $comment   = isset($input['comment']) ? sanitize((string)$input['comment']) : '';
-
     try {
         $pdo->beginTransaction();
-
-        // Блокируем строку товара, но только своей компании
-        $stmt = $pdo->prepare(
-            'SELECT id, quantity FROM products WHERE id = :id AND company_id = :cid FOR UPDATE'
-        );
-        $stmt->execute([':id' => $productId, ':cid' => $companyId]);
-        $product = $stmt->fetch();
-
-        if (!$product) {
-            $pdo->rollBack();
-            return ['ok' => false, 'error' => 'Товар не найден'];
-        }
-
+        $product = get_product_for_update($pdo, $productId, $companyId);
+        if (!$product) {$pdo->rollBack();return ['ok' => false, 'error' => 'Товар не найден'];}
         $current = (float)$product['quantity'];
-        $delta   = 0.0;
-
-        switch ($type) {
-            case 'in':
-                $delta = $qty;
-                break;
-            case 'out':
-            case 'writeoff':
-                if ($current < $qty) {
-                    $pdo->rollBack();
-                    return ['ok' => false, 'error' => 'Недостаточно товара'];
-                }
-                $delta = -$qty;
-                break;
-            default:
-                $pdo->rollBack();
-                return ['ok' => false, 'error' => 'Неизвестный тип операции'];
-        }
-
+        $calc = calculate_delta($type, $qty, $current);
+        if (!$calc['ok']) {$pdo->rollBack();return $calc;}
+        $delta = $calc['delta'];
         $upd = $pdo->prepare('UPDATE products SET quantity = quantity + :d WHERE id = :id AND company_id = :cid');
         $upd->execute([':d' => $delta, ':id' => $productId, ':cid' => $companyId]);
-
-        $ins = $pdo->prepare(
-            'INSERT INTO operations (company_id, type, product_id, qty, comment, user_id, created_at)
-             VALUES (:cid, :t, :pid, :qty, :c, :uid, NOW())'
-        );
-        $ins->execute([
-            ':cid' => $companyId,
-            ':t'   => $type,
-            ':pid' => $productId,
-            ':qty' => $qty,
-            ':c'   => $comment !== '' ? $comment : null,
-            ':uid' => $userId,
-        ]);
+        $ins = $pdo->prepare('INSERT INTO operations (company_id, type, product_id, qty, comment, user_id, created_at)VALUES (:cid, :t, :pid, :qty, :c, :uid, NOW())');
+        $ins->execute([':cid' => $companyId,':t'   => $type,':pid' => $productId,':qty' => $qty,':c'   => $comment !== '' ? $comment : null,':uid' => $userId,]);
         $opId = (int)$pdo->lastInsertId();
-
         $pdo->commit();
-
         return ['ok' => true, 'id' => $opId, 'quantity' => $current + $delta];
-    } catch (Throwable $e) {
+    } 
+    catch (Throwable $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         error_log('[operation] ' . $e->getMessage());
         return ['ok' => false, 'error' => 'Ошибка при проведении операции'];
