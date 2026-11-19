@@ -48,6 +48,7 @@ try {
         $offset  = ($page - 1) * $perPage;
 
         $data = products_list($pdo, $cid, $search, $perPage, $offset);
+        $data['debug_memory'] = memory_get_peak_usage(true);
         json_response(true, $data);
     }
 

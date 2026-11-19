@@ -11,7 +11,7 @@ declare(strict_types=1);
         <?php endif; ?>
     </main>
 
-<script src="assets/app.js"></script>
+<script src="<?= base_url() ?>/assets/app.js"></script>
 <script>
     App.init(
         <?= json_encode($user, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>,

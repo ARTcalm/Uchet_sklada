@@ -58,5 +58,5 @@ require_once __DIR__ . '/../partials/layout_header.php';
     </form>
 </dialog>
 
-<script src="assets/pages/products.js"></script>
+<script src="<?= base_url() ?>/assets/pages/products.js"></script>
 <?php require_once __DIR__ . '/../partials/layout_footer.php'; ?>

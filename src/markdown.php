@@ -1,12 +1,24 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/helpers.php';
+
 
 function parse_markdown(string $text): string {
     $text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
 
     // 1. Картинки (обрабатываем первыми, чтобы не попадали в абзацы)
     // Формат: ![alt текст](url)
-    $text = preg_replace('/!\[(.*?)\]\((.*?)\)/s', '<img src="$2" alt="$1" class="article-image">', $text);
+    $text = preg_replace_callback('/!\[(.*?)\]\((.*?)\)/s', function ($matches) {
+        $alt = $matches[1];
+        $url = trim($matches[2]);
+
+        // Если путь относительный (не начинается с http://, https:// или /)
+        if (!preg_match('/^(https?:\/\/|\/)/i', $url)) {
+            $url = base_url() . '/' . ltrim($url, '/');
+        }
+
+        return '<img src="' . $url . '" alt="' . $alt . '" class="article-image">';
+    }, $text);
 
     // 2. Заголовки
     $text = preg_replace('/^## (.*?)$/m', '<h2>$1</h2>', $text);

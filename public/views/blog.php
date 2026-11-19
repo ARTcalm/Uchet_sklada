@@ -33,7 +33,8 @@ $contentHtml = $currentArticle ? parse_markdown($currentArticle['content']) : ''
     <meta name="description" content="<?= $currentArticle ? htmlspecialchars($currentArticle['seo_description']) : 'Полезные статьи об автоматизации склада' ?>">
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/style.css">
+    <?php $base = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/style.css">
     
     <!-- Микроразметка Schema.org для текущей статьи -->
     <?php if ($currentArticle): ?>

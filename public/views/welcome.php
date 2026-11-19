@@ -17,7 +17,7 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="<?= base_url() ?>/assets/style.css">
     <style>
         /* --- Глобальные настройки страницы --- */
         html { scroll-behavior: smooth; }
@@ -443,9 +443,9 @@ $btnText  = $isLogged ? 'Перейти в склад' : 'Войти в скла
         </div>
 
         <div class="gallery-window">
-            <img src="assets/img/1.webp" alt="Главное меню системы" class="gallery-img active" id="img-1">
-            <img src="assets/img/2.webp" alt="Дашборд с графиками" class="gallery-img" id="img-2">
-            <img src="assets/img/3.webp" alt="Таблица операций" class="gallery-img" id="img-3">
+            <img src="<?= base_url() ?>/assets/img/1.webp" alt="Главное меню системы" class="gallery-img active" id="img-1">
+            <img src="<?= base_url() ?>/assets/img/2.webp" alt="Дашборд с графиками" class="gallery-img" id="img-2">
+            <img src="<?= base_url() ?>/assets/img/3.webp" alt="Таблица операций" class="gallery-img" id="img-3">
         </div>
     </section>
 

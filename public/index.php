@@ -6,6 +6,20 @@ session_start();
 require_once __DIR__ . '/../src/helpers.php';
 require_once __DIR__ . '/../src/auth.php';
 
+// Обработка API-запросов для встроенного сервера
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+if (str_starts_with($uri, '/api/')) {
+    $apiFile = __DIR__ . $uri;
+    if (file_exists($apiFile)) {
+        require $apiFile;
+        exit;
+    }
+    http_response_code(404);
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => false, 'error' => 'API endpoint not found']);
+    exit;
+}
+
 // Если параметра page нет — показываем лендинг
 $page = $_GET['page'] ?? 'welcome';
 
